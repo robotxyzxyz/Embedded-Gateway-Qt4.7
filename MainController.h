@@ -2,6 +2,8 @@
 #define MAINCONTROLLER_H
 
 #include <QObject>
+#include <QHash>
+#include <stdint.h>
 class QSettings;
 class QTimer;
 class BaseNode;
@@ -13,11 +15,22 @@ struct Preferences
 	bool deployed;
 };
 
+struct NodeData
+{
+	uint8_t senderNodeId;
+	uint8_t dataSourceNodeId;
+	uint8_t temperature;
+	uint8_t humidity;
+	uint8_t pest;
+	uint8_t par;
+};
+
 struct WsnParams
 {
 	int maxLevel;
 	QList<unsigned int> nodeIds;
-}
+	QHash<QString, NodeData> dataOfNodeIds;
+};
 
 enum WsnSteps
 {
@@ -50,8 +63,10 @@ private:
 	Window *window;
 	BaseNode *baseNode;
 	QTimer *wsnFlowTimer;
+	WsnParams wsnParams;
 	Preferences preferences;
 	int step;
+	bool stepSatisfied;
 };
 
 #endif // MAINCONTROLLER_H

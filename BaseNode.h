@@ -13,6 +13,7 @@ class BaseNode : public QObject
 public:
 	explicit BaseNode(QString path, QObject *parent = 0);
 	~BaseNode();
+	QString path() const;
 
 	static const int SERIAL_OPEN_ERROR = -1;// Inability to open serial port
 	static const int SERIAL_WRITE_ERROR = 0;// Inability to write to serial
@@ -37,6 +38,7 @@ private:
 	uint16_t getCrcOfPacket(QList<uint8_t> packet);
 	uint16_t calcCrcByte(uint16_t crc, uint8_t b);
 
+	QString serialPath;
 	QSocketNotifier *notifier;
 	QList<uint8_t> bufferIn;
 	bool shouldReceive;

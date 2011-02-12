@@ -2,6 +2,7 @@
 #include <QHBoxLayout>
 #include <QTextEdit>
 #include <QPushButton>
+#include <QScrollBar>
 #include <QVBoxLayout>
 
 StatusView::StatusView(QWidget *parent) : QWidget(parent)
@@ -36,10 +37,15 @@ void StatusView::layoutElements()
 
 void StatusView::log(QString text, bool inOwnLine)
 {
+	// Append log
 	if (inOwnLine)
 		logView->append(text);
 	else
 		logView->insertPlainText(text);
+
+	// Scroll to bottom
+	QScrollBar *scroll = logView->verticalScrollBar();
+	scroll->setValue(scroll->maximum());
 }
 
 void StatusView::clearLog()

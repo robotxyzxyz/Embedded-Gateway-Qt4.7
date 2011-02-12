@@ -14,11 +14,14 @@ SOURCES += main.cpp\
         Window.cpp \
     MainController.cpp \
     BaseNode.cpp \
-    StatusView.cpp
+    StatusView.cpp \
+    FMacPacketParser.cpp
 
 HEADERS  += Window.h \
     MainController.h \
     BaseNode.h \
-    StatusView.h
+    StatusView.h \
+    Packets.h \
+    FMacPacketParser.h
 
 FORMS    +=

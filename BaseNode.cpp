@@ -21,6 +21,7 @@ BaseNode::~BaseNode()
 
 int BaseNode::initSerial(QString *path)
 {
+	serialPath = *path;
 	const char *name = path->toAscii().data();
 	int fd = -1;
 	fd = open(name, O_RDWR | O_NOCTTY | O_NONBLOCK);
@@ -31,6 +32,7 @@ int BaseNode::initSerial(QString *path)
 	memset(&options, 0, sizeof(options));
 	options.c_iflag = IGNPAR | IGNBRK;
 	options.c_cflag = B57600 | CS8 | CREAD | CLOCAL;
+	tcflush(fd, TCIFLUSH);
 	if (tcsetattr(fd, TCSAFLUSH, &options) != 0)
 		return -1;
 
@@ -48,13 +50,17 @@ void BaseNode::initMembers()
 
 bool BaseNode::sendPacket(QList<uint8_t> packet)
 {
-	int fd = notifier->socket();
+	int size = packet.size();
 	uint16_t crc = getCrcOfPacket(packet);
+	packet[size - 2] = crc % 0x100;
+	packet[size - 1] = crc / 0x100;
+
 	packet.prepend(0x7e);
-	packet.append(crc % 0x100);
-	packet.append(crc / 0x100);
 	packet.append(0x7e);
-	for (int i = 0; i < packet.size(); i++)
+	size += 2;
+
+	int fd = notifier->socket();
+	for (int i = 0; i < size; i++)
 	{
 		if (write(fd, &(packet[i]), 1) != 1)
 		{
@@ -131,7 +137,9 @@ uint16_t BaseNode::getCrcOfPacket(QList<uint8_t> packet)
 {
 	uint16_t crc = 0;
 	for (int i = 0; i < packet.size() - 2; i++)
+	{
 		crc = calcCrcByte(crc, packet[i]);
+	}
 
 	return crc;
 }
@@ -147,4 +155,9 @@ uint16_t BaseNode::calcCrcByte(uint16_t crc, uint8_t b)
 	crc ^= crc << 12;
 	crc ^= (crc & 0xff) << 5;
 	return crc;
+}
+
+QString BaseNode::path() const
+{
+	return serialPath;
 }

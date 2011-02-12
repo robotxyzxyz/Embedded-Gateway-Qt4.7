@@ -3,6 +3,7 @@
 
 #include <QObject>
 #include <QHash>
+#include <QSet>
 #include <stdint.h>
 #include "FMacPacketParser.h"
 class QSettings;
@@ -31,7 +32,6 @@ enum WsnSteps
 	WSN_DEPLOY_START					= -1,
 	WSN_DEPLOY_RESET					=  0,
 	WSN_DEPLOY_REQUEST_PATH				= 11,
-	WSN_DEPLOY_CHECK_PATH				,
 	WSN_DEPLOY_DISTRIBUTE_TIME_SLOTS	,
 };
 

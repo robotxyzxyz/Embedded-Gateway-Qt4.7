@@ -1,5 +1,5 @@
 #include "FMacPacketParser.h"
-#include "Packets.h"
+#include "PacketSlots.h"
 
 FMacPacketParser::FMacPacketParser(QObject *parent) : QObject(parent)
 {
@@ -17,7 +17,7 @@ void FMacPacketParser::processPacket(QList<uint8_t> packet)
 		if (packet[NODE_PACKET_PATH_SENDER_TIER] == 1)
 			emit gotFirstTierNode();
 
-		emit gotNodeFrom(packet[NODE_PACKET_PATH_SENDER_ID],
+		emit gotNodePath(packet[NODE_PACKET_PATH_SENDER_ID],
 						 packet[NODE_PACKET_PATH_SENDER_PARENT_ID]);
 
 		if (packet[NODE_PACKET_PATH_SOURCE_ID])
@@ -52,7 +52,7 @@ NodeData FMacPacketParser::getDataOfPacket(QList<uint8_t> packet)
 	data.temperature = packet[NODE_PACKET_DATA_TEMPERATURE_HI] * 0x100 +
 					   packet[NODE_PACKET_DATA_TEMPERATURE_LO];
 	data.humidity = packet[NODE_PACKET_DATA_HUMIDITY_HI] * 0x100 +
-					packet[NODE_PACKET_DATA_HUMIDITY_Lo];
+					packet[NODE_PACKET_DATA_HUMIDITY_LO];
 	data.pest = packet[NODE_PACKET_DATA_PEST_HI] * 0x100 +
 				packet[NODE_PACKET_DATA_PEST_LO];
 	data.par = packet[NODE_PACKET_DATA_PAR_HI_HI] * 0x1000000 +

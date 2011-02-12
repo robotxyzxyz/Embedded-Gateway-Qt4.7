@@ -22,6 +22,7 @@ HEADERS  += Window.h \
     BaseNode.h \
     StatusView.h \
     Packets.h \
-    FMacPacketParser.h
+    FMacPacketParser.h \
+    PacketSlots.h
 
 FORMS    +=

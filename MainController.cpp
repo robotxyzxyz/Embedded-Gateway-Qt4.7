@@ -3,6 +3,7 @@
 #include <QTimer>
 #include "BaseNode.h"
 #include "Packets.h"
+#include "PacketSlots.h"
 #include "StatusView.h"
 #include "Window.h"
 
@@ -125,7 +126,8 @@ void MainController::wsnFlowFired()
 	{
 		// First check for the path result from the previous step
 		// Reroute in 3 seconds if the path and tier settings are not complete
-		if ((!hasRootNodes) || (nodeAndParentIds.size() == 0))
+		if ((!wsnParams.hasRootNodes) ||
+			(wsnParams.nodeAndParentIds.size() == 0))
 		{
 			QTimer::singleShot(3000, this, SLOT(deployNetwork()));
 			log("Network deployment failed, will reroute in 3 seconds...");
@@ -135,7 +137,8 @@ void MainController::wsnFlowFired()
 		// Ask nodes to distribute time slots, thus finish deploying
 		baseNode->sendPacket(PACKET_DISTRIBUTE_TIME_SLOTS);
 		QString s;
-		s.sprintf("Deployment finished for %d nodes", nodeAndParentIds.size());
+		s.sprintf("Deployment finished for %d nodes",
+				  wsnParams.nodeAndParentIds.size());
 		log(s);
 	}
 }
@@ -181,7 +184,7 @@ void MainController::addPath(int nodeId, int parentId, bool isRelayed)
 
 		// If the node has parent ID 1 (sink), add its ID as a root node ID
 		if (parentId == 1)
-			rootNodeIds.insert(nodeId);
+			wsnParams.rootNodeIds.insert(nodeId);
 	}
 
 	// Refresh timer if needed
@@ -190,6 +193,14 @@ void MainController::addPath(int nodeId, int parentId, bool isRelayed)
 	// See comments in wsnFlowFired()
 	if (wsnFlowTimer->interval() < 3000)
 		wsnFlowTimer->setInterval(3000);
+}
+
+void MainController::addData(NodeData data, bool isSupplemental)
+{
+}
+
+void MainController::wakeNetwork()
+{
 }
 
 void MainController::log(QString text, bool inOwnLine)

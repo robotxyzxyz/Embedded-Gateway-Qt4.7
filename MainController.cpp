@@ -74,7 +74,7 @@ void MainController::deployNetwork()
 {
 	wsnFlowTimer->stop();
 	clearLog();
-	step = WSN_NOT_DEPLOYED;
+	step = WSN_STEP_NOT_DEPLOYED;
 
 	stepSatisfied = false;
 
@@ -89,7 +89,7 @@ void MainController::deployNetwork()
 void MainController::wsnFlowFired()
 {
 	step++;
-	if (step == WSN_DEPLOY_START)
+	if (step == WSN_STEP_DEPLOY_START)
 	{
 		log(QString("Will deploy via ") + baseNode->path());
 		wsnFlowTimer->start(1000);
@@ -159,7 +159,7 @@ void MainController::wsnFlowFired()
 	{
 		// Return the deployment info via SMS
 		log("Returning path info...");
-
+		sendPathSmss();
 	}
 }
 
@@ -223,16 +223,16 @@ void MainController::wakeNetwork()
 {
 }
 
-QStringList MainController::getPathSms()
+void MainController::sendPathSmss()
 {
 	// Calculate how many SMSs are needed
 	int nodeCount = wsnParams.nodeAndParentIds.size();
-	int smsCount = nodesCount / 10;
-	if (nodesCount % 10 != 0)
+	int smsCount = nodeCount / 10;
+	if (nodeCount % 10 != 0)
 		smsCount++;
 
-	// Format SMSs
-	QList<int> nodeIds = nodeAndParentIds.keys();
+	// Format and send SMSs
+	QList<int> nodeIds = wsnParams.nodeAndParentIds.keys();
 	qSort(nodeIds.begin(), nodeIds.end());
 	for (int i = 0; i < smsCount; i++)
 	{
@@ -249,12 +249,12 @@ QStringList MainController::getPathSms()
 			int nodeId = nodeIds[nodeCount - 1];
 			sms.append(QString::number(nodeId) +
 					   ",1," +
-					   QString::number(nodeAndParentIds[nodeId]) +
+					   QString::number(wsnParams.nodeAndParentIds[nodeId]) +
 					   ';');
 			nodeCount--;
 		}
 
-		// Send the current SMS
+		// Send the constructed SMS
 		gsmControl->sendSmsCommand(sms);
 	}
 }

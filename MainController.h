@@ -63,7 +63,7 @@ private slots:
 private:
 	void getPreferences();
 	void initMembers();
-	QStringList getPathSmses();
+	void sendPathSmss();
 	void log(QString text, bool inOwnLine = true);
 	void clearLog();
 

@@ -2,7 +2,7 @@
 #define GSMMODULECONTROLLER_H
 
 #include <QThread>
-class QStringList;
+#include <QStringList>
 class GsmModule;
 
 class GsmModuleController : public QThread

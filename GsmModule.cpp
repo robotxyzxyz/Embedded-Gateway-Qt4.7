@@ -8,10 +8,7 @@ GsmModule::GsmModule(QString path, QObject *parent) : QObject(parent)
 	initMembers();
 
 	if (initSerial(&path) < 0)
-	{
-		shouldReceive = false;
 		emit occuredError(SERIAL_OPEN_ERROR);
-	}
 }
 
 GsmModule::~GsmModule()
@@ -51,7 +48,8 @@ bool GsmModule::sendCommand(QString command)
 	int fd = notifier->socket();
 	for (int i = 0; i < command.length(); i++)
 	{
-		if (write(fd, &(command[i].toAscii()), 1) != 1)
+		char c = command[i].toAscii();
+		if (write(fd, &c, 1) != 1)
 		{
 			emit occuredError(SERIAL_WRITE_ERROR);
 			return false;

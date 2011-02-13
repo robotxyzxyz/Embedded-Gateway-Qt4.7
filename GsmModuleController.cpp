@@ -1,5 +1,4 @@
 #include "GsmModuleController.h"
-#include <QStringList>
 #include "GsmModule.h"
 
 GsmModuleController::GsmModuleController(QString devicePath,
@@ -7,7 +6,7 @@ GsmModuleController::GsmModuleController(QString devicePath,
 										 QObject *parent)
 				   : QThread(parent)
 {
-	initMembers(&devicePath, &defaultNumber);
+	initMembers(&devicePath, &defaultTelNum);
 }
 
 void GsmModuleController::initMembers(QString *devicePath,
@@ -101,7 +100,7 @@ void GsmModuleController::run()
 			}
 
 			// Reset busy time count
-			busyTimer = 0;
+			busyTime = 0;
 		}
 		else if (busyTime > 60)
 		{

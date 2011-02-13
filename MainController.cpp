@@ -1,7 +1,9 @@
 #include "MainController.h"
 #include <QSettings>
 #include <QTimer>
+#include <QtAlgorithms>
 #include "BaseNode.h"
+#include "GsmModuleController.h"
 #include "Packets.h"
 #include "PacketSlots.h"
 #include "StatusView.h"
@@ -33,12 +35,21 @@ void MainController::getPreferences()
 		preferences.nodePort = QString::fromAscii("/dev/ttyUSB0");
 		pref.setValue("serials/nodePort", QVariant(preferences.nodePort));
 	}
+	preferences.nodePort = pref.value("serials/nodePort").toString();
+	if (preferences.nodePort == "")
+	{
+		preferences.nodePort = QString::fromAscii("/dev/ttyUSB1");
+		pref.setValue("serials/nodePort", QVariant(preferences.nodePort));
+	}
 	preferences.deployed = pref.value("wsn/deployed").toBool();
 }
 
 void MainController::initMembers()
 {
 	baseNode = new BaseNode(preferences.nodePort, this);
+	gsmControl = new GsmModuleController(preferences.gsmPort,
+										 "0952650121",
+										 this);
 	wsnFlowTimer = new QTimer(this);
 	wsnFlowTimer->setSingleShot(true);
 	connect(wsnFlowTimer, SIGNAL(timeout()), this, SLOT(wsnFlowFired()));
@@ -61,6 +72,7 @@ void MainController::initMembers()
 
 void MainController::deployNetwork()
 {
+	wsnFlowTimer->stop();
 	clearLog();
 	step = WSN_NOT_DEPLOYED;
 
@@ -82,13 +94,13 @@ void MainController::wsnFlowFired()
 		log(QString("Will deploy via ") + baseNode->path());
 		wsnFlowTimer->start(1000);
 	}
-	else if (step == WSN_DEPLOY_RESET)
+	else if (step == WSN_STEP_DEPLOY_RESET)
 	{
 		log("Nodes will reset...");
 		baseNode->sendPacket(PACKET_RESET);
 		wsnFlowTimer->start(5000);
 	}
-	else if (step < WSN_DEPLOY_REQUEST_PATH)
+	else if (step < WSN_STEP_DEPLOY_REQUEST_PATH)
 	{
 		// Print the one-time Phrase start
 		// Flag used here is reset in the next step (WSN_DEPLOY_REQUEST_PATH)
@@ -99,7 +111,7 @@ void MainController::wsnFlowFired()
 		}
 
 		// Print count of deploy command
-		log(QString::number(step - WSN_DEPLOY_RESET) + " ", false);
+		log(QString::number(step - WSN_STEP_DEPLOY_RESET) + " ", false);
 
 		// Send the command
 		baseNode->sendPacket(PACKET_START_DEPLOY);
@@ -107,7 +119,7 @@ void MainController::wsnFlowFired()
 		// Run timer
 		wsnFlowTimer->start(1000);
 	}
-	else if (step == WSN_DEPLOY_REQUEST_PATH)
+	else if (step == WSN_STEP_DEPLOY_REQUEST_PATH)
 	{
 		// Reset flag used in previous step (WSN_DEPLOY_REQUEST_PATH)
 		stepSatisfied = false;
@@ -122,7 +134,7 @@ void MainController::wsnFlowFired()
 		//  are received for more than 3 seconds
 		// See comments in setMaxTier() and addPath()
 	}
-	else if (step == WSN_DEPLOY_DISTRIBUTE_TIME_SLOTS)
+	else if (step == WSN_STEP_DEPLOY_DISTRIBUTE_TIME_SLOTS)
 	{
 		// First check for the path result from the previous step
 		// Reroute in 3 seconds if the path and tier settings are not complete
@@ -140,6 +152,14 @@ void MainController::wsnFlowFired()
 		s.sprintf("Deployment finished for %d nodes",
 				  wsnParams.nodeAndParentIds.size());
 		log(s);
+
+		wsnFlowTimer->start(100);
+	}
+	else if (step == WSN_STEP_DEPLOY_FINISH)
+	{
+		// Return the deployment info via SMS
+		log("Returning path info...");
+
 	}
 }
 
@@ -183,7 +203,7 @@ void MainController::addPath(int nodeId, int parentId, bool isRelayed)
 		log(s);
 
 		// If the node has parent ID 1 (sink), add its ID as a root node ID
-		if (parentId == 1)
+		if (parentId == 1 && !wsnParams.rootNodeIds.contains(nodeId))
 			wsnParams.rootNodeIds.insert(nodeId);
 	}
 
@@ -201,6 +221,42 @@ void MainController::addData(NodeData data, bool isSupplemental)
 
 void MainController::wakeNetwork()
 {
+}
+
+QStringList MainController::getPathSms()
+{
+	// Calculate how many SMSs are needed
+	int nodeCount = wsnParams.nodeAndParentIds.size();
+	int smsCount = nodesCount / 10;
+	if (nodesCount % 10 != 0)
+		smsCount++;
+
+	// Format SMSs
+	QList<int> nodeIds = nodeAndParentIds.keys();
+	qSort(nodeIds.begin(), nodeIds.end());
+	for (int i = 0; i < smsCount; i++)
+	{
+		// Construct header
+		QString sms("s02;v2;");
+		sms.append(QString::number(smsCount) + ';');
+		sms.append(QString::number(i + 1) + ';');
+
+		// Construct node list
+		for (int i = 0; i < 10; i++)
+		{
+			if (nodeCount == 0)
+				break;
+			int nodeId = nodeIds[nodeCount - 1];
+			sms.append(QString::number(nodeId) +
+					   ",1," +
+					   QString::number(nodeAndParentIds[nodeId]) +
+					   ';');
+			nodeCount--;
+		}
+
+		// Send the current SMS
+		gsmControl->sendSmsCommand(sms);
+	}
 }
 
 void MainController::log(QString text, bool inOwnLine)

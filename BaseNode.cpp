@@ -80,6 +80,7 @@ void BaseNode::readData(int fd)
 		shouldReceive = false;
 		is7DBreaking = false;
 		emit occuredError(SERIAL_READ_ERROR);
+		return;
 	}
 
 	// Check the byte for packet manipulation
@@ -155,9 +156,4 @@ uint16_t BaseNode::calcCrcByte(uint16_t crc, uint8_t b)
 	crc ^= crc << 12;
 	crc ^= (crc & 0xff) << 5;
 	return crc;
-}
-
-QString BaseNode::path() const
-{
-	return serialPath;
 }

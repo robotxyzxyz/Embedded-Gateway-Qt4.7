@@ -13,7 +13,10 @@ class BaseNode : public QObject
 public:
 	explicit BaseNode(QString path, QObject *parent = 0);
 	~BaseNode();
-	QString path() const;
+	inline QString path() const
+	{
+		return serialPath;
+	}
 
 	static const int SERIAL_OPEN_ERROR = -1;// Inability to open serial port
 	static const int SERIAL_WRITE_ERROR = 0;// Inability to write to serial

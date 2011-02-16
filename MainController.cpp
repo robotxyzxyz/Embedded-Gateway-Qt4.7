@@ -1,4 +1,5 @@
 #include "MainController.h"
+#include <QDir>
 #include <QSettings>
 #include <QTimer>
 #include <QtAlgorithms>
@@ -26,7 +27,8 @@ MainController::~MainController()
 void MainController::getPreferences()
 {
 	// Read the pref file
-	QSettings pref("/wsn/gateway/preferences", QSettings::IniFormat);
+	QSettings pref(QDir::homePath() + "/wsn/gateway/preferences",
+				   QSettings::IniFormat);
 
 	// Check for preference values, if not valid then re-generate
 	preferences.nodePort = pref.value("serials/nodePort").toString();

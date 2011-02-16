@@ -4,21 +4,25 @@
 GsmModuleController::GsmModuleController(QString devicePath,
 										 QString defaultTelNum,
 										 QObject *parent)
-				   : QThread(parent)
+				   : QObject(parent)
 {
 	initMembers(&devicePath, &defaultTelNum);
+	QObject::startTimer(5000);
+	// The checking runs every 5 seconds, which is a bit long under normal
+	//  circumstances...Maybe should use different delay time depending on
+	//  different commands (CSQ is very quick, CMGS header is fine, and CMGS
+	//  message sending part might even take loooooonger)
 }
 
 void GsmModuleController::initMembers(QString *devicePath,
 									  QString *defaultTelNum)
 {
 	device = new GsmModule(*devicePath, this);
-	isBusy = false;
 	busyTime = 0;
 	defaultNumber = *defaultTelNum;
 
 	connect(device, SIGNAL(receivedLine(QString)),
-			this, SLOT(gotLine(QString)));
+			this, SLOT(onReceivedLine(QString)));
 	connect(device, SIGNAL(occuredError(const int)),
 			this, SIGNAL(occuredError(const int)));
 }
@@ -56,69 +60,26 @@ void GsmModuleController::sendSmsCommand(QString message, QString *number)
 
 void GsmModuleController::onReceivedLine(QString line)
 {
-	// Check line type
-	if (line == "OK")
+	if (line.contains("+CSQ:"))
 	{
-		// OK signals command successfulness, clear business flag
-		isBusy = false;
-
-		// Arrange the received data (if any) and signal them
-		for (int i = 0; i < bufferIn.size(); i++)
-		{
-			QString item = bufferIn[i];
-			if (item.startsWith("+CSQ:"))
-			{
-				int csq = item.section(' ', 1, 1).toInt();
-				emit receivedCarrierSignalQuality(csq);
-			}
-			if (item.startsWith("+CMGS:"))
-			{
-				int mr = item.section(' ', 1, 1).toInt();
-				emit receivedSmsReference(mr);
-			}
-		}
+		int csq = line.section(' ', 1, 1)
+					  .section(',', 0, 0)
+					  .toInt();
+		emit receivedCarrierSignalQuality(csq);
 	}
-	else
+	if (line.contains("+CMGS:"))
 	{
-		bufferIn.append(line);
+		int mr = line.section(' ', 1, 1)
+					 .section('\r', 0, 0)
+					 .section('\n', 0, 0)
+					 .toInt();
+		emit receivedSmsReference(mr);
 	}
 }
 
-void GsmModuleController::run()
+void GsmModuleController::timerEvent(QTimerEvent *)
 {
-	while(1)
-	{
-		// Check is the device is already busy
-		if (!isBusy)
-		{
-			// If the device is idle, send a command (if needed)
-			// Lock the device after sending
-			if (!queue.isEmpty())
-			{
-				device->sendCommand(queue.takeFirst());
-				isBusy = true;
-			}
-
-			// Reset busy time count
-			busyTime = 0;
-		}
-		else if (busyTime > 60)
-		{
-			// If the device is busy for too long, force sending a command
-			// The threshold is 1 minute (60 seconds)
-			if (!queue.isEmpty())
-			{
-				device->sendCommand(queue.takeFirst());
-				busyTime = 0;
-			}
-			emit occuredError(MODULE_TIMED_OUT_ERROR);
-		}
-		else
-		{
-			busyTime++;
-		}
-
-		// The above task runs every 1 second
-		sleep(1);
-	}
+	// Ssend a command if needed
+	if (!queue.isEmpty())
+		device->sendCommand(queue.takeFirst());
 }

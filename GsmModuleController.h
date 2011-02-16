@@ -1,11 +1,11 @@
 #ifndef GSMMODULECONTROLLER_H
 #define GSMMODULECONTROLLER_H
 
-#include <QThread>
+#include <QObject>
 #include <QStringList>
 class GsmModule;
 
-class GsmModuleController : public QThread
+class GsmModuleController : public QObject
 {
     Q_OBJECT
 
@@ -32,6 +32,9 @@ public slots:
 	void sendCarrierSignalQualityCommand();
 	void sendSmsCommand(QString message, QString *number = 0);
 
+protected:
+	void timerEvent(QTimerEvent *e);
+
 private slots:
 	void onReceivedLine(QString line);
 
@@ -42,7 +45,6 @@ private:
 	QString defaultNumber;
 	QStringList queue;
 	QStringList bufferIn;
-	bool isBusy;
 	int busyTime;
 
 };

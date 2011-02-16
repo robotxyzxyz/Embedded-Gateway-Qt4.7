@@ -29,6 +29,8 @@ int GsmModule::initSerial(QString *path)
 	memset(&options, 0, sizeof(options));
 	options.c_iflag = IGNPAR | IGNBRK;
 	options.c_cflag = B115200 | CS8 | CREAD | CLOCAL;
+	cfsetispeed(&options, B115200);
+	cfsetospeed(&options, B115200);		// Not sure if needed under Linux...
 	tcflush(fd, TCIFLUSH);
 	if (tcsetattr(fd, TCSAFLUSH, &options) != 0)
 		return -1;
@@ -68,7 +70,7 @@ void GsmModule::readData(int fd)
 		return;
 	}
 
-	// Check if is newline character; if so, signal a receivedLine() event
+	// Check if is an end-of character; if so, signal a receivedLine() event
 	if (byte == '\n')
 	{
 		// If the last character in the buffer is '\r', this is a \r\n
@@ -78,6 +80,14 @@ void GsmModule::readData(int fd)
 			bufferIn.remove(last);
 
 		// Signal line receiving event if needed
+		if (bufferIn.length() > 0)
+			emit receivedLine(bufferIn);
+		bufferIn.clear();
+	}
+	else if (byte == '\x1a')
+	{
+		// If the character is EOF (ASCII 0x1a), this is the end of an SMS
+		//  input. Break this as a line too.
 		if (bufferIn.length() > 0)
 			emit receivedLine(bufferIn);
 		bufferIn.clear();

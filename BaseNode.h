@@ -12,7 +12,7 @@ class BaseNode : public QObject
 
 public:
 	explicit BaseNode(QString path, QObject *parent = 0);
-	~BaseNode();
+	virtual ~BaseNode();
 	inline QString path() const
 	{
 		return serialPath;

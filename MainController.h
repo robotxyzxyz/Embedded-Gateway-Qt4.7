@@ -45,7 +45,7 @@ class MainController : public QObject
 
 public:
     explicit MainController(QObject *parent = 0);
-	~MainController();
+	virtual ~MainController();
 
 public slots:
 

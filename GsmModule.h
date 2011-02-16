@@ -11,7 +11,7 @@ class GsmModule : public QObject
 
 public:
 	explicit GsmModule(QString path, QObject *parent = 0);
-	~GsmModule();
+	virtual ~GsmModule();
 	inline QString path() const
 	{
 		return serialPath;

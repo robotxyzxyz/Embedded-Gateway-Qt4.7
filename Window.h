@@ -9,8 +9,8 @@ class Window : public QTabWidget
     Q_OBJECT
 
 public:
-    Window(QWidget *parent = 0);
-    ~Window();
+	explicit Window(QWidget *parent = 0);
+	virtual ~Window();
 
 	StatusView *statusTab() const
 	{

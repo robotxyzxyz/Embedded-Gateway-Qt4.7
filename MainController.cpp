@@ -215,7 +215,8 @@ void MainController::addPath(int nodeId, int parentId, bool isRelayed)
 		wsnFlowTimer->setInterval(3000);
 }
 
-void MainController::addData(NodeData data, bool isSupplemental)
+//void MainController::addData(NodeData data, bool isSupplemental)
+void MainController::addData(NodeData, bool)
 {
 }
 

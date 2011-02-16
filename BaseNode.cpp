@@ -32,6 +32,8 @@ int BaseNode::initSerial(QString *path)
 	memset(&options, 0, sizeof(options));
 	options.c_iflag = IGNPAR | IGNBRK;
 	options.c_cflag = B57600 | CS8 | CREAD | CLOCAL;
+	cfsetispeed(&options, B57600);
+	cfsetospeed(&options, B57600);		// Not sure if needed under Linux...
 	tcflush(fd, TCIFLUSH);
 	if (tcsetattr(fd, TCSAFLUSH, &options) != 0)
 		return -1;

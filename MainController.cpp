@@ -16,40 +16,24 @@ MainController::MainController(QObject *parent) : QObject(parent)
 	getPreferences();
 	initMembers();
 
-	if (!preferences.deployed)
+	if (!preferences->isDeployed())
 		QTimer::singleShot(1000, this, SLOT(deployNetwork()));
 }
 
 MainController::~MainController()
 {
+	delete preferences;
 }
 
 void MainController::getPreferences()
 {
-	// Read the pref file
-	QSettings pref(QDir::homePath() + "/wsn/gateway/preferences",
-				   QSettings::IniFormat);
-
-	// Check for preference values, if not valid then re-generate
-	preferences.nodePort = pref.value("serials/nodePort").toString();
-	if (preferences.nodePort == "")
-	{
-		preferences.nodePort = QString::fromAscii("/dev/ttyUSB0");
-		pref.setValue("serials/nodePort", QVariant(preferences.nodePort));
-	}
-	preferences.nodePort = pref.value("serials/nodePort").toString();
-	if (preferences.nodePort == "")
-	{
-		preferences.nodePort = QString::fromAscii("/dev/ttyUSB1");
-		pref.setValue("serials/nodePort", QVariant(preferences.nodePort));
-	}
-	preferences.deployed = pref.value("wsn/deployed").toBool();
+	preferences = new Preferences();
 }
 
 void MainController::initMembers()
 {
-	baseNode = new BaseNode(preferences.nodePort, this);
-	gsmControl = new GsmModuleController(preferences.gsmPort,
+	baseNode = new BaseNode(preferences->nodePort(), this);
+	gsmControl = new GsmModuleController(preferences->gsmPort(),
 										 "0952650121",
 										 this);
 	wsnFlowTimer = new QTimer(this);
@@ -162,6 +146,31 @@ void MainController::wsnFlowFired()
 		// Return the deployment info via SMS
 		log("Returning path info...");
 		sendPathSmss();
+		preferences->setIsDeployed(true);
+
+		// Wait 10 seconds before collecting data
+		QTimer::singleShot(10000, this, SLOT(collectData()));
+	}
+	else if (step == WSN_STEP_COLLECT_START)
+	{
+
+	}
+}
+
+void MainController::collectData()
+{
+	wsnFlowTimer->stop();
+	clearLog();
+
+	if (isNetworkCollectable())
+	{
+		step = WSN_STEP_NOT_COLLECTED;
+		wsnFlowTimer->start(1);
+	}
+	else
+	{
+		step = WSN_STEP_NOT_DEPLOYED;
+		wsnFlowTimer->start(1);
 	}
 }
 
@@ -217,6 +226,18 @@ void MainController::addPath(int nodeId, int parentId, bool isRelayed)
 		wsnFlowTimer->setInterval(3000);
 }
 
+bool MainController::isNetworkCollectable()
+{
+	// List of invalid network parameters
+	if ((!wsnParams.hasRootNodes) ||
+		(wsnParams.maxTier < 2) ||
+		(wsnParams.rootNodeIds.size() == 0) ||
+		(wsnParams.nodeAndParentIds.size() == 0))
+		return false;
+
+	return true;
+}
+
 //void MainController::addData(NodeData data, bool isSupplemental)
 void MainController::addData(NodeData, bool)
 {
@@ -270,4 +291,70 @@ void MainController::log(QString text, bool inOwnLine)
 void MainController::clearLog()
 {
 	window->statusTab()->clearLog();
+}
+
+
+Preferences::Preferences()
+{
+	// Read the pref file
+	pref = new QSettings(QDir::homePath() + "/wsn/gateway/preferences",
+						 QSettings::IniFormat);
+
+	// Check for preference values, if not valid then re-generate
+	// Notice that since we want to read from the pref file, we directly
+	//  access the member variables here instead of using setters, which
+	//  sync the pref file also
+
+	// First, nodePort
+	mNodePort = pref->value("serials/nodePort").toString();
+	if (mNodePort == "")
+		setNodePort(QString::fromAscii("/dev/ttyUSB0"));
+
+	// Then, gsmPort
+	mGsmPort = pref->value("serials/gsmPort").toString();
+	if (mGsmPort == "")
+		setGsmPort(QString::fromAscii("/dev/ttyUSB1"));
+
+	// Finally, check if the network has already been deployed
+	// If the setting is not set, the value would be false, so we don't need
+	//  to check to generate it
+	mIsDeployed = pref->value("wsn/deployed").toBool();
+}
+
+Preferences::~Preferences()
+{
+	delete pref;
+}
+
+void Preferences::setNodePort(QString p)
+{
+	mNodePort = p;
+	pref->setValue("serials/nodePort", QVariant(mNodePort));
+}
+
+void Preferences::setGsmPort(QString p)
+{
+	mGsmPort = p;
+	pref->setValue("serials/gsmPort", QVariant(mGsmPort));
+}
+
+void Preferences::setIsDeployed(bool d)
+{
+	mIsDeployed = d;
+	pref->setValue("serials/isDeployed", QVariant(mIsDeployed));
+}
+
+QString Preferences::nodePort() const
+{
+	return mNodePort;
+}
+
+QString Preferences::gsmPort() const
+{
+	return mGsmPort;
+}
+
+bool Preferences::isDeployed() const
+{
+	return mIsDeployed;
 }

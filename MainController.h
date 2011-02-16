@@ -13,11 +13,27 @@ class BaseNode;
 class GsmModuleController;
 class Window;
 
-struct Preferences
+class Preferences
 {
-	QString nodePort;
-	QString gsmPort;
-	bool deployed;
+public:
+	explicit Preferences();
+	virtual ~Preferences();
+
+	// Setters
+	void setNodePort(QString p);
+	void setGsmPort(QString p);
+	void setIsDeployed(bool d);
+
+	// Getters
+	QString nodePort() const;
+	QString gsmPort() const;
+	bool isDeployed() const;
+
+private:
+	QSettings *pref;
+	QString mNodePort;
+	QString mGsmPort;
+	bool mIsDeployed;
 };
 
 struct WsnParams
@@ -37,6 +53,8 @@ enum WsnSteps
 	WSN_STEP_DEPLOY_REQUEST_PATH			= 11,
 	WSN_STEP_DEPLOY_DISTRIBUTE_TIME_SLOTS	,
 	WSN_STEP_DEPLOY_FINISH					,
+	WSN_STEP_NOT_COLLECTED					,
+	WSN_STEP_COLLECT_START					,
 };
 
 class MainController : public QObject
@@ -53,6 +71,7 @@ signals:
 
 private slots:
 	void deployNetwork();
+	void collectData();
 	void wsnFlowFired();
 	void setMaxTier(int tier);
 	void addFirstTierNode();
@@ -64,6 +83,7 @@ private:
 	void getPreferences();
 	void initMembers();
 	void sendPathSmss();
+	bool isNetworkCollectable();
 	void log(QString text, bool inOwnLine = true);
 	void clearLog();
 
@@ -73,7 +93,7 @@ private:
 	QTimer *wsnFlowTimer;
 	WsnParams wsnParams;
 	FMacPacketParser packParser;
-	Preferences preferences;
+	Preferences *preferences;
 	int step;
 	bool stepSatisfied;
 };

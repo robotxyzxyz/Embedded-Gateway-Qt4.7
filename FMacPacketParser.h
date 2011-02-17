@@ -9,6 +9,7 @@ struct NodeData
 {
 	uint8_t senderNodeId;
 	uint8_t dataSourceNodeId;
+	uint8_t dataSourceTier;
 	uint16_t temperature;
 	uint16_t humidity;
 	uint16_t pest;

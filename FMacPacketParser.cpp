@@ -49,6 +49,7 @@ NodeData FMacPacketParser::getDataOfPacket(QList<uint8_t> packet)
 	NodeData data;
 	data.senderNodeId = packet[NODE_PACKET_DATA_SENDER_ID];
 	data.dataSourceNodeId = packet[NODE_PACKET_DATA_SOURCE_ID];
+	data.dataSourceTier = packet[NODE_PACKET_DATA_SOURCE_TIER];
 	data.temperature = packet[NODE_PACKET_DATA_TEMPERATURE_HI] * 0x100 +
 					   packet[NODE_PACKET_DATA_TEMPERATURE_LO];
 	data.humidity = packet[NODE_PACKET_DATA_HUMIDITY_HI] * 0x100 +

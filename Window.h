@@ -19,8 +19,14 @@ public:
 
 public slots:
 
+signals:
+	void clearLogTriggered();
+	void deployTriggered();
+	void collectTriggered();
+
 private slots:
     void buildElements();
+	void initMembers();
 
 private:
 	StatusView *status;

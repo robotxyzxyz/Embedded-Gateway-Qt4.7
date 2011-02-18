@@ -5,6 +5,7 @@
 Window::Window(QWidget *parent) : QTabWidget(parent)
 {
     buildElements();
+	initMembers();
     this->showMaximized();
 	this->show();
 }
@@ -21,4 +22,11 @@ void Window::buildElements()
     this->addTab(new QLabel("Weather"), "Weather");
 	this->addTab(status, "Status");
     this->addTab(new QLabel("Settings"), "Settings");
+}
+
+void Window::initMembers()
+{
+	connect(status, SIGNAL(clearClicked()), this, SIGNAL(clearLogTriggered()));
+	connect(status, SIGNAL(deployClicked()), this, SIGNAL(deployTriggered()));
+	connect(status, SIGNAL(collectClicked()), this, SIGNAL(collectTriggered()));
 }

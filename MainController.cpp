@@ -554,13 +554,15 @@ Preferences::Preferences()
 	// Then, gsmPort
 	mGsmPort = pref->value("serials/gsmPort").toString();
 	if (mGsmPort == "")
-		setGsmPort(QString::fromAscii("/dev/ttyUSB1"));
+		setGsmPort(QString::fromAscii("/dev/ttySAC2"));
 
 	// Gateway ID
 	mGatewayId = pref->value("gateway/gatewayId").toInt();
 
 	// Server Phone
 	mServerPhone = pref->value("gateway/serverPhone").toString();
+	if (mServerPhone == "")
+		setServerPhone(QString::fromAscii("0952650121"));
 
 	// Finally, check if the network has already been deployed
 	// If the setting is not set, the value would be false, so we don't need

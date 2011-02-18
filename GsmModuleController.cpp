@@ -79,7 +79,9 @@ void GsmModuleController::onReceivedLine(QString line)
 
 void GsmModuleController::timerEvent(QTimerEvent *)
 {
-	// Ssend a command if needed
+	// Send a command if needed
 	if (!queue.isEmpty())
+	{
 		device->sendCommand(queue.takeFirst());
+	}
 }

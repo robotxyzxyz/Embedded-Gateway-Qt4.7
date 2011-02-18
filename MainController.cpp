@@ -10,6 +10,9 @@
 #include "PacketSlots.h"
 #include "StatusView.h"
 #include "Window.h"
+#include <QDebug>
+
+Q_DECLARE_METATYPE(QList<int>)
 
 MainController::MainController(QObject *parent) : QObject(parent)
 {
@@ -17,8 +20,12 @@ MainController::MainController(QObject *parent) : QObject(parent)
 	preferences = new Preferences();
 	initMembers();
 
+	// If the network is not deployed, do it now
+	// Otherwise load the deployment settings from file
 	if (!preferences->isDeployed())
 		QTimer::singleShot(1000, this, SLOT(deployNetwork()));
+	else
+		preferences->loadDeployParamsInto(&wsnParams);
 }
 
 MainController::~MainController()
@@ -31,7 +38,7 @@ void MainController::initMembers()
 	baseNode = new BaseNode(preferences->nodePort(), this);
 	gsmControl
 		= new GsmModuleController(preferences->gsmPort(),
-								  QString::number(preferences->gatewayId()),
+								  preferences->serverPhone(),
 								  this);
 	wsnFlowTimer = new QTimer(this);
 	wsnFlowTimer->setSingleShot(true);
@@ -61,6 +68,7 @@ void MainController::deployNetwork()
 
 	stepSatisfied = false;
 
+	preferences->setIsDeployed(false);
 	wsnParams.hasRootNodes = false;
 	wsnParams.maxTier = 0;
 	wsnParams.nodeAndParentIds.clear();
@@ -213,6 +221,10 @@ void MainController::wsnFlowFired()
 		log("Will return data via GSM...");
 		sendDataSmss();
 	}
+	else
+	{
+		wsnFlowTimer->start(1);
+	}
 }
 
 void MainController::collectData()
@@ -262,9 +274,9 @@ void MainController::addPath(int nodeId, int parentId, bool isRelayed)
 		wsnParams.nodeAndParentIds.insert(nodeId, parentId);
 		QString s;
 		if (isRelayed)
-			s.sprintf("New path relayed:  %2d via %2d", nodeId, parentId);
+			s.sprintf("New path relayed:  %d via %d", nodeId, parentId);
 		else
-			s.sprintf("New path returned: %2d via %2d", nodeId, parentId);
+			s.sprintf("New path returned: %d via %d", nodeId, parentId);
 		log(s);
 
 		// If the node has parent ID 1 (sink), add its ID as a root node ID
@@ -284,16 +296,26 @@ bool MainController::isNetworkCollectable()
 {
 	// List of invalid network parameters
 	if ((!wsnParams.hasRootNodes) ||
-		(wsnParams.maxTier < 2) ||
+		(wsnParams.maxTier < 1) ||
 		(wsnParams.rootNodeIds.size() == 0) ||
 		(wsnParams.nodeAndParentIds.size() == 0))
+	{
+		qDebug() << "root" << wsnParams.hasRootNodes
+				<< "maxTier" << wsnParams.maxTier
+				<< "root ids" << wsnParams.rootNodeIds
+				<< "nodes/parents" << wsnParams.nodeAndParentIds;
 		return false;
+	}
 
 	return true;
 }
 
 void MainController::addData(NodeData data, bool isSupplemental)
 {
+	int sourceId = data.dataSourceNodeId;
+	if (wsnParams.dataOfNodeIds.contains(sourceId))
+		return;
+
 	QString l;
 	// ACK the data packet if needed
 	if (!isSupplemental)
@@ -313,13 +335,10 @@ void MainController::addData(NodeData data, bool isSupplemental)
 	l.append(QString::number(data.dataSourceNodeId) + ':');
 	log(l);
 
-	int sourceId = data.dataSourceNodeId;
-	if (wsnParams.dataOfNodeIds.contains(sourceId))
-		return;
 	wsnParams.dataOfNodeIds.insert(sourceId, data);
-	l.sprintf("Temp %d; Hmdy %d; Illm %d; Pest %d",
-			  data.temperature,
-			  data.humidity,
+	l.sprintf("Temp %.1f; Hmdy %.1f; Illm %d; Pest %d",
+			  data.temperature / 10.0,
+			  data.humidity / 10.0,
 			  data.par,
 			  data.pest);
 	log(l);
@@ -332,7 +351,9 @@ void MainController::addData(NodeData data, bool isSupplemental)
 uint16_t MainController::getTimeToSleep()
 {
 	QTime now = QTime::currentTime();
-	return (uint16_t)(now.minute() % 30 * 60 + now.second());
+	uint16_t elapsed = now.minute() % 30 * 60 + now.second();
+
+	return (60 * 30 - elapsed);
 }
 
 void MainController::wakeNetwork()
@@ -344,8 +365,8 @@ void MainController::wakeNetwork()
 	if (!wsnFlowTimer->isActive())
 	{
 		log("Nodes are awake, checking network status...");
-		step = WSN_STEP_HAS_DEPLOYED;
-		wsnFlowTimer->start(10000);
+		step = WSN_STEP_NOT_COLLECTED;
+		wsnFlowTimer->start(1000);
 	}
 }
 
@@ -357,7 +378,7 @@ void MainController::sendPathSmss()
 	if (nodeCount % 10 != 0)
 		smsCount++;
 	QString l;
-	l.sprintf("Will send %d SMSs for %d nodes", smsCount, nodeCount);
+	l.sprintf("Will send %d SMS(s) for %d node(s)", smsCount, nodeCount);
 	log(l);
 
 	// Format and send SMSs
@@ -397,7 +418,7 @@ void MainController::sendDataSmss()
 	if (nodeCount % 5 != 0)
 		smsCount++;
 	QString l;
-	l.sprintf("Will send %d SMSs for %d nodes", smsCount, nodeCount);
+	l.sprintf("Will send %d SMS(s) for %d node(s)", smsCount, nodeCount);
 	log(l);
 
 	// Format and send SMSs
@@ -471,12 +492,24 @@ Preferences::Preferences()
 		setGsmPort(QString::fromAscii("/dev/ttyUSB1"));
 
 	// Gateway ID
-	mGatewayId = pref->value("wsn/gatewayId").toInt();
+	mGatewayId = pref->value("gateway/gatewayId").toInt();
+
+	// Server Phone
+	mServerPhone = pref->value("gateway/serverPhone").toString();
 
 	// Finally, check if the network has already been deployed
 	// If the setting is not set, the value would be false, so we don't need
 	//  to check to generate it
 	mIsDeployed = pref->value("wsn/isDeployed").toBool();
+
+	// If the network is deployed, load the deploy params in
+	if (mIsDeployed)
+	{/*
+		mMaxTier = pref->value("wsn/maxTier").toInt();
+		mRootNodeIds = pref->value("wsn/rootNodeIds").toList().toSet();
+		QList<int> nodes = pref->value("wsn/nodeIds").toList();
+		mNodeAndParentIds =*/
+	}
 }
 
 Preferences::~Preferences()
@@ -498,7 +531,7 @@ void Preferences::setGsmPort(QString p)
 void Preferences::setServerPhone(QString p)
 {
 	mServerPhone = p;
-	pref->setValue("wsn/serverPhone", QVariant(mServerPhone));
+	pref->setValue("gateway/serverPhone", QVariant(mServerPhone));
 }
 
 void Preferences::setIsDeployed(bool d)
@@ -510,7 +543,7 @@ void Preferences::setIsDeployed(bool d)
 void Preferences::setGatewayId(int id)
 {
 	mGatewayId = id;
-	pref->setValue("wsn/gatewayId", QVariant(mGatewayId));
+	pref->setValue("gateway/gatewayId", QVariant(mGatewayId));
 }
 
 QString Preferences::nodePort() const
@@ -528,13 +561,23 @@ QString Preferences::serverPhone() const
 	return mServerPhone;
 }
 
-/*
-static void Preferences::saveDeployParams(WsnParams p)
+void Preferences::saveDeployParams(WsnParams p)
 {
-	// Get param saving file
-	pFile = new QSettings(QDir::homePath() + "/wsn/gateway/networkParams",
-						  QSettings::IniFormat);
-	pFile.setValue("deploy/maxTier", QVariant(p.maxTier));
-	pFile.setValue("deploy/")
+	pref->setValue("wsn/maxTier", QVariant(p.maxTier));
+	pref->setValue("wsn/rootNodeIds",
+				   QVariant::fromValue< QList<int> >(p.rootNodeIds.toList()));
+	pref->setValue("wsn/nodeIds",
+				   QVariant::fromValue< QList<int> >(p.nodeAndParentIds.keys()));
+	pref->setValue("wsn/parentIds",
+				   QVariant::fromValue< QList<int> >(p.nodeAndParentIds.values()));
 }
-*/
+
+void Preferences::loadDeployParamsInto(WsnParams *p)
+{
+	p->maxTier = pref->value("wsn/maxTier").toInt();
+	p->rootNodeIds = pref->value("wsn/rootNodeIds").value< QList<int> >().toSet();
+	QList<int> ns = pref->value("wsn/nodeIds").value< QList<int> >();
+	QList<int> ps = pref->value("wsn/parentIds").value< QList<int> >();
+	for (int i = 0; i < ns.size(); i++)
+		p->nodeAndParentIds.insert(ns[i], ps[i]);
+}

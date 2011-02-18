@@ -13,13 +13,43 @@ class BaseNode;
 class GsmModuleController;
 class Window;
 
+struct WsnParams
+{
+	bool hasRootNodes;
+	int maxTier;
+	QSet<int> rootNodeIds;
+	QList<int> rootNodeIdsToCollect;
+	QHash<int, int> nodeAndParentIds;
+	QHash<int, NodeData> dataOfNodeIds;
+};
+
+enum WsnSteps
+{
+	WSN_STEP_NOT_DEPLOYED					= -2,
+	WSN_STEP_DEPLOY_START					= -1,
+	WSN_STEP_DEPLOY_RESET					=  0,
+	WSN_STEP_DEPLOY_REQUEST_PATH				= 11,
+	WSN_STEP_DEPLOY_DISTRIBUTE_TIME_SLOTS	,
+	WSN_STEP_DEPLOY_FINISH					,
+	WSN_STEP_HAS_DEPLOYED					,
+	WSN_STEP_NOT_COLLECTED					,
+	WSN_STEP_COLLECT_START					,
+	WSN_STEP_COLLECT_REQUEST				,
+	WSN_STEP_COLLECT_REQUESTING				,
+	WSN_STEP_COLLECT_WAIT_TO_RECEIVE		,
+	WSN_STEP_SYNCHRONIZE					,
+	WSN_STEP_SUPPLEMENTAL_COLLECT_AND_SLEEP	,
+	WSN_STEP_COLLECT_FINISH					,
+};
+
 class Preferences
 {
 public:
 	explicit Preferences();
 	virtual ~Preferences();
 
-	//static void saveDeployParams(WsnParams p);
+	void saveDeployParams(WsnParams p);
+	void loadDeployParamsInto(WsnParams *p);
 
 	// Setters
 	void setNodePort(QString p);
@@ -48,35 +78,9 @@ private:
 	QString mServerPhone;
 	bool mIsDeployed;
 	int mGatewayId;
-};
-
-struct WsnParams
-{
-	bool hasRootNodes;
-	int maxTier;
-	QSet<int> rootNodeIds;
-	QList<int> rootNodeIdsToCollect;
-	QHash<int, int> nodeAndParentIds;
-	QHash<int, NodeData> dataOfNodeIds;
-};
-
-enum WsnSteps
-{
-	WSN_STEP_NOT_DEPLOYED					= -2,
-	WSN_STEP_DEPLOY_START					= -1,
-	WSN_STEP_DEPLOY_RESET					=  0,
-	WSN_STEP_DEPLOY_REQUEST_PATH				= 11,
-	WSN_STEP_DEPLOY_DISTRIBUTE_TIME_SLOTS	,
-	WSN_STEP_DEPLOY_FINISH					,
-	WSN_STEP_HAS_DEPLOYED					,
-	WSN_STEP_NOT_COLLECTED					,
-	WSN_STEP_COLLECT_START					,
-	WSN_STEP_COLLECT_REQUEST				,
-	WSN_STEP_COLLECT_REQUESTING				,
-	WSN_STEP_COLLECT_WAIT_TO_RECEIVE		,
-	WSN_STEP_SYNCHRONIZE					,
-	WSN_STEP_SUPPLEMENTAL_COLLECT_AND_SLEEP	,
-	WSN_STEP_COLLECT_FINISH					,
+	int mMaxTier;
+	QSet<int> mRootNodeIds;
+	QHash<int, int> mNodeAndParentIds;
 };
 
 class MainController : public QObject

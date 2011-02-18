@@ -239,6 +239,9 @@ void MainController::wsnFlowFired()
 
 void MainController::collectData()
 {
+	if (!preferences->isDeployed())
+		return;
+
 	wsnFlowTimer->stop();
 	clearLog();
 
@@ -305,7 +308,7 @@ void MainController::addPath(int nodeId, int parentId, bool isRelayed)
 bool MainController::isNetworkCollectable()
 {
 	// List of invalid network parameters
-	if ((!wsnParams.hasRootNodes) ||
+	if (	(!wsnParams.hasRootNodes) ||
 		(wsnParams.maxTier < 1) ||
 		(wsnParams.rootNodeIds.size() == 0) ||
 		(wsnParams.nodeAndParentIds.size() == 0))
@@ -377,7 +380,7 @@ void MainController::wakeNetwork()
 	{
 		log("Nodes are awake, checking network status...");
 		step = WSN_STEP_NOT_COLLECTED;
-		wsnFlowTimer->start(5000);
+		QTimer::singleShot(5000, this, SLOT(collectData()));
 	}
 }
 

@@ -60,9 +60,14 @@ void MainController::initMembers()
 	wsnFlowTimer->setSingleShot(true);
 	connect(wsnFlowTimer, SIGNAL(timeout()), this, SLOT(wsnFlowFired()));
 
+	// sleepCheckTimer is a 35-minute timer to check whether the network collects
+	//  data periodically
+	// If the network doesn't do anything for 35 minutes, something is wrong
+	// This timer is stopped when collectData() or deployNetwork() is called
 	sleepCheckTimer = new QTimer(this);
 	sleepCheckTimer->setSingleShot(true);
 	connect(sleepCheckTimer, SIGNAL(timeout()), this, SLOT(deployNetwork()));
+	sleepCheckTimer->start(35 * 60 * 1000);
 
 	// Connect packet receiving to parsing
 	connect(baseNode, SIGNAL(receivedPacket(QList<uint8_t>)),

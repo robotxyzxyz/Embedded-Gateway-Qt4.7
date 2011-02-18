@@ -489,10 +489,8 @@ void MainController::log(QString text, bool inOwnLine)
 
 	QTextStream logger(logFile);
 	if (inOwnLine)
-		logger << '\n' << text << '\n';
-	else
-		logger << text;
-
+		logger << '\n';
+	logger << text;
 }
 
 void MainController::clearLog()

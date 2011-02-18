@@ -116,8 +116,8 @@ private:
 	void log(QString text, bool inOwnLine = true);
 
 	Window *window;
-	QString logName;
 	QFile *logFile;
+	QString logName;
 	BaseNode *baseNode;
 	GsmModuleController *gsmControl;
 	QTimer *wsnFlowTimer;

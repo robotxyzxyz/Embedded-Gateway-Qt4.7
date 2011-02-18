@@ -17,14 +17,13 @@ public slots:
 	void clearLog();
 
 signals:
-	void clearClicked();
-	void deployClicked();
-	void collectClicked();
+	void clearLogTriggered();
+	void deployTriggered();
+	void collectTriggered();
 
 private:
-	void buildElements();
-	void layoutElements();
 	void initMembers();
+	void layoutElements();
 
 	QTextEdit *logView;
 	QPushButton *clear;

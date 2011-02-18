@@ -7,12 +7,11 @@
 
 StatusView::StatusView(QWidget *parent) : QWidget(parent)
 {
-	buildElements();
-	layoutElements();
 	initMembers();
+	layoutElements();
 }
 
-void StatusView::buildElements()
+void StatusView::initMembers()
 {
 	logView = new QTextEdit(this);
 	logView->setReadOnly(true);
@@ -22,6 +21,10 @@ void StatusView::buildElements()
 	clear = new QPushButton("Clear log", this);
 	deploy = new QPushButton("Deploy", this);
 	collect = new QPushButton("Collect", this);
+
+	connect(clear, SIGNAL(clicked()), this, SIGNAL(clearLogTriggered()));
+	connect(deploy, SIGNAL(clicked()), this, SIGNAL(deployTriggered()));
+	connect(collect, SIGNAL(clicked()), this, SIGNAL(collectTriggered()));
 }
 
 void StatusView::layoutElements()
@@ -36,13 +39,6 @@ void StatusView::layoutElements()
 	whole->addWidget(logView, 1);
 	whole->addLayout(buttons, 0);
 	setLayout(whole);
-}
-
-void StatusView::initMembers()
-{
-	connect(clear, SIGNAL(clicked()), this, SIGNAL(clearClicked()));
-	connect(deploy, SIGNAL(clicked()), this, SIGNAL(deployClicked()));
-	connect(collect, SIGNAL(clicked()), this, SIGNAL(collectClicked()));
 }
 
 void StatusView::log(QString text, bool inOwnLine)

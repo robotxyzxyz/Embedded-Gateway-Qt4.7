@@ -60,6 +60,10 @@ void MainController::initMembers()
 	wsnFlowTimer->setSingleShot(true);
 	connect(wsnFlowTimer, SIGNAL(timeout()), this, SLOT(wsnFlowFired()));
 
+	sleepCheckTimer = new QTimer(this);
+	sleepCheckTimer->setSingleShot(true);
+	connect(sleepCheckTimer, SIGNAL(timeout()), this, SLOT(deployNetwork()));
+
 	// Connect packet receiving to parsing
 	connect(baseNode, SIGNAL(receivedPacket(QList<uint8_t>)),
 			&packParser, SLOT(processPacket(QList<uint8_t>)));
@@ -86,6 +90,7 @@ void MainController::initMembers()
 
 void MainController::deployNetwork()
 {
+	sleepCheckTimer->stop();
 	wsnFlowTimer->stop();
 	clearLog();
 	step = WSN_STEP_NOT_DEPLOYED;
@@ -253,6 +258,11 @@ void MainController::wsnFlowFired()
 		log("Will return data via GSM...");
 		sendDataSmss();
 		log("Data collection finished");
+
+		// Start a 35-minute timer to check if the network has collected data
+		// If the network doesn't do anything for 35 minutes, something is wrong
+		// This timer is stopped when collectData() or deployNetwork() is called
+		sleepCheckTimer->start(35 * 60 * 1000);
 	}
 	else
 	{
@@ -265,6 +275,7 @@ void MainController::collectData()
 	if (!preferences->isDeployed())
 		return;
 
+	sleepCheckTimer->stop();
 	wsnFlowTimer->stop();
 	stepSatisfied = false;
 	clearLog();
@@ -388,7 +399,7 @@ void MainController::addData(NodeData data, bool isSupplemental)
 uint16_t MainController::getTimeToSleep()
 {
 	QTime now = QTime::currentTime();
-	int elapsed = now.minute()  % 30 * 60 + now.second();
+	int elapsed = now.minute() % 30 * 60 + now.second();
 
 	// Add one minute sleep time to prevent node clock drifting error
 	return (60 * 30 - elapsed + 60);
@@ -554,7 +565,7 @@ Preferences::Preferences()
 	// Then, gsmPort
 	mGsmPort = pref->value("serials/gsmPort").toString();
 	if (mGsmPort == "")
-		setGsmPort(QString::fromAscii("/dev/ttySAC2"));
+		setGsmPort(QString::fromAscii("/dev/ttyUSB1"));
 
 	// Gateway ID
 	mGatewayId = pref->value("gateway/gatewayId").toInt();

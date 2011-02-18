@@ -123,6 +123,7 @@ private:
 	QFile *logFile;
 	QString logName;
 	QTimer *wsnFlowTimer;
+	QTimer *sleepCheckTimer;
 	BaseNode *baseNode;
 	GsmModuleController *gsmControl;
 	FMacPacketParser packParser;

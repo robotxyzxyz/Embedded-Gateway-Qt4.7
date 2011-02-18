@@ -6,6 +6,7 @@
 #include <QSet>
 #include <stdint.h>
 #include "FMacPacketParser.h"
+class QFile;
 class QSettings;
 class QStringList;
 class QTimer;
@@ -25,19 +26,19 @@ struct WsnParams
 
 enum WsnSteps
 {
-	WSN_STEP_NOT_DEPLOYED					= -2,
-	WSN_STEP_DEPLOY_START					= -1,
-	WSN_STEP_DEPLOY_RESET					=  0,
+	WSN_STEP_NOT_DEPLOYED						= -2,
+	WSN_STEP_DEPLOY_START						= -1,
+	WSN_STEP_DEPLOY_RESET						=  0,
 	WSN_STEP_DEPLOY_REQUEST_PATH				= 11,
-	WSN_STEP_DEPLOY_DISTRIBUTE_TIME_SLOTS	,
+	WSN_STEP_DEPLOY_DISTRIBUTE_TIME_SLOTS		,
 	WSN_STEP_DEPLOY_FINISH					,
-	WSN_STEP_HAS_DEPLOYED					,
+	WSN_STEP_HAS_DEPLOYED						,
 	WSN_STEP_NOT_COLLECTED					,
 	WSN_STEP_COLLECT_START					,
-	WSN_STEP_COLLECT_REQUEST				,
+	WSN_STEP_COLLECT_REQUEST					,
 	WSN_STEP_COLLECT_REQUESTING				,
-	WSN_STEP_COLLECT_WAIT_TO_RECEIVE		,
-	WSN_STEP_SYNCHRONIZE					,
+	WSN_STEP_COLLECT_WAIT_TO_RECEIVE			,
+	WSN_STEP_SYNCHRONIZE						,
 	WSN_STEP_SUPPLEMENTAL_COLLECT_AND_SLEEP	,
 	WSN_STEP_COLLECT_FINISH					,
 };
@@ -104,6 +105,7 @@ private slots:
 	void addPath(int nodeId, int parentId, bool isRelayed);
 	void addData(NodeData data, bool isSupplemental);
 	void wakeNetwork();
+	void clearLog();
 
 private:
 	void initMembers();
@@ -112,9 +114,10 @@ private:
 	bool isNetworkCollectable();
 	uint16_t getTimeToSleep();
 	void log(QString text, bool inOwnLine = true);
-	void clearLog();
 
 	Window *window;
+	QString logName;
+	QFile *logFile;
 	BaseNode *baseNode;
 	GsmModuleController *gsmControl;
 	QTimer *wsnFlowTimer;

@@ -2,6 +2,7 @@
 #include <QDateTime>
 #include <QDir>
 #include <QSettings>
+#include <QTextStream>
 #include <QTimer>
 #include <QtAlgorithms>
 #include "BaseNode.h"
@@ -16,7 +17,6 @@ Q_DECLARE_METATYPE(QList<int>)
 
 MainController::MainController(QObject *parent) : QObject(parent)
 {
-    window = new Window();
 	preferences = new Preferences();
 	initMembers();
 
@@ -25,7 +25,10 @@ MainController::MainController(QObject *parent) : QObject(parent)
 	if (!preferences->isDeployed())
 		QTimer::singleShot(1000, this, SLOT(deployNetwork()));
 	else
+	{
+		log("Existing network status detected, resume without deploying");
 		preferences->loadDeployParamsInto(&wsnParams);
+	}
 }
 
 MainController::~MainController()
@@ -35,6 +38,8 @@ MainController::~MainController()
 
 void MainController::initMembers()
 {
+	window = new Window();
+
 	baseNode = new BaseNode(preferences->nodePort(), this);
 	gsmControl
 		= new GsmModuleController(preferences->gsmPort(),
@@ -58,6 +63,11 @@ void MainController::initMembers()
 			this, SLOT(addData(NodeData, bool)));
 	connect(&packParser, SIGNAL(hadAwakeNode()), this, SLOT(wakeNetwork()));
 	connect(&packParser, SIGNAL(shouldReroute()), this, SLOT(deployNetwork()));
+
+	// Connect UI events
+	connect(window, SIGNAL(clearLogTriggered()), this, SLOT(clearLog()));
+	connect(window, SIGNAL(deployTriggered()), this, SLOT(deployNetwork()));
+	connect(window, SIGNAL(collectTriggered()), this, SLOT(collectData()));
 }
 
 void MainController::deployNetwork()
@@ -178,7 +188,7 @@ void MainController::wsnFlowFired()
 	else if (step == WSN_STEP_COLLECT_REQUESTING)
 	{
 		int thisId = wsnParams.rootNodeIdsToCollect.takeFirst();
-		log("Sending request to node " + thisId);
+		log("Sending request to node " + QString::number(thisId));
 		QList<uint8_t> req = PACKET_COLLECT_REQUEST;
 		req[GATEWAY_PACKET_RECEIVER] = (uint8_t)thisId;
 		baseNode->sendPacket(req);
@@ -351,9 +361,10 @@ void MainController::addData(NodeData data, bool isSupplemental)
 uint16_t MainController::getTimeToSleep()
 {
 	QTime now = QTime::currentTime();
-	uint16_t elapsed = now.minute() % 30 * 60 + now.second();
+	int elapsed = now.minute()  % 30 * 60 + now.second();
 
-	return (60 * 30 - elapsed);
+	// Add one minute sleep time to prevent node clock drifting error
+	return (60 * 30 - elapsed + 60);
 }
 
 void MainController::wakeNetwork()
@@ -366,7 +377,7 @@ void MainController::wakeNetwork()
 	{
 		log("Nodes are awake, checking network status...");
 		step = WSN_STEP_NOT_COLLECTED;
-		wsnFlowTimer->start(1000);
+		wsnFlowTimer->start(5000);
 	}
 }
 
@@ -462,6 +473,26 @@ void MainController::sendDataSmss()
 void MainController::log(QString text, bool inOwnLine)
 {
 	window->statusTab()->log(text, inOwnLine);
+
+	// Write to log file
+	QString name = QDir::homePath() +
+				   "/wsn/gateway/log" +
+				   QDate::currentDate().toString("yyyy-MM-dd");
+	if (!logFile || logName != name)
+	{
+		logName = name;
+
+		if (logFile) delete logFile;
+		logFile = new QFile(name, this);
+		logFile->open(QIODevice::WriteOnly | QIODevice::Text | QIODevice::Append);
+	}
+
+	QTextStream logger(logFile);
+	if (inOwnLine)
+		logger << '\n' << text << '\n';
+	else
+		logger << text;
+
 }
 
 void MainController::clearLog()

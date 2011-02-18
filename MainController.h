@@ -19,7 +19,6 @@ struct WsnParams
 	bool hasRootNodes;
 	int maxTier;
 	QSet<int> rootNodeIds;
-	QList<int> rootNodeIdsToCollect;
 	QHash<int, int> nodeAndParentIds;
 	QHash<int, NodeData> dataOfNodeIds;
 };
@@ -50,7 +49,7 @@ public:
 	virtual ~Preferences();
 
 	void saveDeployParams(WsnParams p);
-	void loadDeployParamsInto(WsnParams *p);
+	WsnParams loadDeployParams();
 
 	// Setters
 	void setNodePort(QString p);
@@ -96,6 +95,9 @@ public slots:
 
 signals:
 
+protected:
+	void timerEvent(QTimerEvent *e);
+
 private slots:
 	void deployNetwork();
 	void collectData();
@@ -105,10 +107,12 @@ private slots:
 	void addPath(int nodeId, int parentId, bool isRelayed);
 	void addData(NodeData data, bool isSupplemental);
 	void wakeNetwork();
+	void loadNetworkParams();
 	void clearLog();
 
 private:
 	void initMembers();
+	void startGsmCsqUpdateDaemon();
 	void sendPathSmss();
 	void sendDataSmss();
 	bool isNetworkCollectable();
@@ -118,12 +122,13 @@ private:
 	Window *window;
 	QFile *logFile;
 	QString logName;
+	QTimer *wsnFlowTimer;
 	BaseNode *baseNode;
 	GsmModuleController *gsmControl;
-	QTimer *wsnFlowTimer;
-	WsnParams wsnParams;
 	FMacPacketParser packParser;
 	Preferences *preferences;
+	WsnParams wsnParams;
+	QList<int> rootNodeIdsToCollect;
 	int step;
 	bool stepSatisfied;
 };

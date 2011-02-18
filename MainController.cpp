@@ -7,28 +7,25 @@
 #include <QtAlgorithms>
 #include "BaseNode.h"
 #include "GsmModuleController.h"
+#include "MainView.h"
 #include "Packets.h"
 #include "PacketSlots.h"
 #include "StatusView.h"
 #include "Window.h"
 #include <QDebug>
 
-Q_DECLARE_METATYPE(QList<int>)
-
 MainController::MainController(QObject *parent) : QObject(parent)
 {
 	preferences = new Preferences();
 	initMembers();
+	startGsmCsqUpdateDaemon();
 
 	// If the network is not deployed, do it now
 	// Otherwise load the deployment settings from file
 	if (!preferences->isDeployed())
 		QTimer::singleShot(1000, this, SLOT(deployNetwork()));
 	else
-	{
-		log("Existing network status detected, resume without deploying");
-		preferences->loadDeployParamsInto(&wsnParams);
-	}
+		QTimer::singleShot(1000, this, SLOT(loadNetworkParams()));
 }
 
 MainController::~MainController()
@@ -36,9 +33,23 @@ MainController::~MainController()
 	delete preferences;
 }
 
+void MainController::startGsmCsqUpdateDaemon()
+{
+	// Update GSM signal quality every 5 minutes
+	QObject::startTimer(5 * 60 * 1000);
+	connect(gsmControl, SIGNAL(receivedCarrierSignalQuality(int)),
+			window->mainTab(), SLOT(setGsmSignalQuality(int)));
+}
+
+void MainController::timerEvent(QTimerEvent *)
+{
+	gsmControl->sendCarrierSignalQualityCommand();
+}
+
 void MainController::initMembers()
 {
 	window = new Window();
+	logFile = NULL;
 
 	baseNode = new BaseNode(preferences->nodePort(), this);
 	gsmControl
@@ -65,9 +76,12 @@ void MainController::initMembers()
 	connect(&packParser, SIGNAL(shouldReroute()), this, SLOT(deployNetwork()));
 
 	// Connect UI events
-	connect(window, SIGNAL(clearLogTriggered()), this, SLOT(clearLog()));
-	connect(window, SIGNAL(deployTriggered()), this, SLOT(deployNetwork()));
-	connect(window, SIGNAL(collectTriggered()), this, SLOT(collectData()));
+	connect(window->statusTab(), SIGNAL(clearLogTriggered()),
+			this, SLOT(clearLog()));
+	connect(window->statusTab(), SIGNAL(deployTriggered()),
+			this, SLOT(deployNetwork()));
+	connect(window->statusTab(), SIGNAL(collectTriggered()),
+			this, SLOT(collectData()));
 }
 
 void MainController::deployNetwork()
@@ -166,7 +180,9 @@ void MainController::wsnFlowFired()
 	}
 	else if (step == WSN_STEP_HAS_DEPLOYED)
 	{
-		// Wait 10 seconds before collecting data
+		// Save deploy params, then wait 10 seconds before collecting data
+		preferences->saveDeployParams(wsnParams);
+		window->mainTab()->setDeployedNodes(wsnParams.nodeAndParentIds.keys());
 		QTimer::singleShot(10000, this, SLOT(collectData()));
 		log("Will collect in 10 seconds...");
 	}
@@ -181,18 +197,18 @@ void MainController::wsnFlowFired()
 	else if (step == WSN_STEP_COLLECT_REQUEST)
 	{
 		log("Requesting data from first-tier nodes");
-		wsnParams.rootNodeIdsToCollect = wsnParams.rootNodeIds.toList();
+		rootNodeIdsToCollect = wsnParams.rootNodeIds.toList();
 
 		wsnFlowTimer->start(1);
 	}
 	else if (step == WSN_STEP_COLLECT_REQUESTING)
 	{
-		int thisId = wsnParams.rootNodeIdsToCollect.takeFirst();
+		int thisId = rootNodeIdsToCollect.takeFirst();
 		log("Sending request to node " + QString::number(thisId));
 		QList<uint8_t> req = PACKET_COLLECT_REQUEST;
 		req[GATEWAY_PACKET_RECEIVER] = (uint8_t)thisId;
 		baseNode->sendPacket(req);
-		if (!wsnParams.rootNodeIdsToCollect.isEmpty())
+		if (!rootNodeIdsToCollect.isEmpty())
 			step--;
 
 		wsnFlowTimer->start(5000);
@@ -204,7 +220,6 @@ void MainController::wsnFlowFired()
 	}
 	else if (step == WSN_STEP_SYNCHRONIZE)
 	{
-		log("Data collection finished");
 		log("Sending synchronization command");
 		baseNode->sendPacket(PACKET_SYNCHRONIZE);
 		wsnFlowTimer->start(5000);
@@ -224,12 +239,20 @@ void MainController::wsnFlowFired()
 	else if (step == WSN_STEP_COLLECT_FINISH)
 	{
 		wsnFlowTimer->stop();
+		if (wsnParams.dataOfNodeIds.isEmpty())
+		{
+			log("No collectable nodes, will reroute in 3 seconds...");
+			QTimer::singleShot(3000, this, SLOT(deployNetwork()));
+			return;
+		}
+		window->mainTab()->setCollectedNodes(wsnParams.dataOfNodeIds.keys());
 		log("Supplemental collection finished, nodes should be asleep now");
 		log("Data collected from " +
 			QString::number(wsnParams.dataOfNodeIds.size()) +
 			" node(s)");
 		log("Will return data via GSM...");
 		sendDataSmss();
+		log("Data collection finished");
 	}
 	else
 	{
@@ -243,6 +266,7 @@ void MainController::collectData()
 		return;
 
 	wsnFlowTimer->stop();
+	stepSatisfied = false;
 	clearLog();
 
 	if (isNetworkCollectable())
@@ -338,18 +362,18 @@ void MainController::addData(NodeData data, bool isSupplemental)
 		ack[GATEWAY_PACKET_DEPTH] = data.dataSourceTier;
 		baseNode->sendPacket(ack);
 
-		l = "Received collected data from node ";
+		l = "Data collected from node ";
 	}
 	else
 	{
 		wsnFlowTimer->setInterval(5000);
-		l = "Received supplementally collected data from node ";
+		l = "Data supplementally collected from node ";
 	}
 	l.append(QString::number(data.dataSourceNodeId) + ':');
 	log(l);
 
 	wsnParams.dataOfNodeIds.insert(sourceId, data);
-	l.sprintf("Temp %.1f; Hmdy %.1f; Illm %d; Pest %d",
+	l.sprintf("     Temp %.1f; Hmdy %.1f; Illm %d; Pest %d",
 			  data.temperature / 10.0,
 			  data.humidity / 10.0,
 			  data.par,
@@ -376,9 +400,10 @@ void MainController::wakeNetwork()
 	baseNode->sendPacket(PACKET_IS_AWAKE);
 
 	// Wait for reroute command
-	if (!wsnFlowTimer->isActive())
+	if (!stepSatisfied)
 	{
 		log("Nodes are awake, checking network status...");
+		stepSatisfied = true;
 		step = WSN_STEP_NOT_COLLECTED;
 		QTimer::singleShot(5000, this, SLOT(collectData()));
 	}
@@ -392,7 +417,7 @@ void MainController::sendPathSmss()
 	if (nodeCount % 10 != 0)
 		smsCount++;
 	QString l;
-	l.sprintf("Will send %d SMS(s) for %d node(s)", smsCount, nodeCount);
+	l.sprintf("Sending %d SMS(s) for %d node(s)", smsCount, nodeCount);
 	log(l);
 
 	// Format and send SMSs
@@ -432,7 +457,7 @@ void MainController::sendDataSmss()
 	if (nodeCount % 5 != 0)
 		smsCount++;
 	QString l;
-	l.sprintf("Will send %d SMS(s) for %d node(s)", smsCount, nodeCount);
+	l.sprintf("Sending %d SMS(s) for %d node(s)", smsCount, nodeCount);
 	log(l);
 
 	// Format and send SMSs
@@ -473,26 +498,34 @@ void MainController::sendDataSmss()
 	}
 }
 
+void MainController::loadNetworkParams()
+{
+	log("Detected existing configuration, will resume without deploying");
+	wsnParams = preferences->loadDeployParams();
+	window->mainTab()->setDeployedNodes(wsnParams.nodeAndParentIds.keys());
+}
+
 void MainController::log(QString text, bool inOwnLine)
 {
 	window->statusTab()->log(text, inOwnLine);
 
 	// Write to log file
 	QString name = QDir::homePath() +
-				   "/wsn/gateway/log" +
-				   QDate::currentDate().toString("yyyy-MM-dd");
+				   "/wsn/gateway/" +
+				   QDate::currentDate().toString("yyyy-MM-dd") +
+				   ".log";
 	if (!logFile || logName != name)
 	{
 		logName = name;
-
 		if (logFile) delete logFile;
 		logFile = new QFile(name, this);
 		logFile->open(QIODevice::WriteOnly | QIODevice::Text | QIODevice::Append);
 	}
 
 	QTextStream logger(logFile);
+	QString tag = QTime::currentTime().toString("[hh:mm:ss] ");
 	if (inOwnLine)
-		logger << '\n';
+		logger << '\n' << tag;
 	logger << text;
 }
 
@@ -533,15 +566,6 @@ Preferences::Preferences()
 	// If the setting is not set, the value would be false, so we don't need
 	//  to check to generate it
 	mIsDeployed = pref->value("wsn/isDeployed").toBool();
-
-	// If the network is deployed, load the deploy params in
-	if (mIsDeployed)
-	{/*
-		mMaxTier = pref->value("wsn/maxTier").toInt();
-		mRootNodeIds = pref->value("wsn/rootNodeIds").toList().toSet();
-		QList<int> nodes = pref->value("wsn/nodeIds").toList();
-		mNodeAndParentIds =*/
-	}
 }
 
 Preferences::~Preferences()
@@ -596,20 +620,39 @@ QString Preferences::serverPhone() const
 void Preferences::saveDeployParams(WsnParams p)
 {
 	pref->setValue("wsn/maxTier", QVariant(p.maxTier));
-	pref->setValue("wsn/rootNodeIds",
-				   QVariant::fromValue< QList<int> >(p.rootNodeIds.toList()));
-	pref->setValue("wsn/nodeIds",
-				   QVariant::fromValue< QList<int> >(p.nodeAndParentIds.keys()));
-	pref->setValue("wsn/parentIds",
-				   QVariant::fromValue< QList<int> >(p.nodeAndParentIds.values()));
+
+	QStringList roots;
+	for (int i = 0; i < p.rootNodeIds.size(); i++)
+		roots.append(QString::number(p.rootNodeIds.toList()[i]));
+	pref->setValue("wsn/rootNodeIds", QVariant(roots));
+
+	QStringList nodes;
+	for (int i = 0; i < p.nodeAndParentIds.keys().size(); i++)
+		nodes.append(QString::number(p.nodeAndParentIds.keys()[i]));
+	pref->setValue("wsn/nodeIds", QVariant(nodes));
+
+	QStringList parents;
+	for (int i = 0; i < p.nodeAndParentIds.values().size(); i++)
+		parents.append(QString::number(p.nodeAndParentIds.values()[i]));
+	pref->setValue("wsn/parentIds", QVariant(parents));
 }
 
-void Preferences::loadDeployParamsInto(WsnParams *p)
+WsnParams Preferences::loadDeployParams()
 {
-	p->maxTier = pref->value("wsn/maxTier").toInt();
-	p->rootNodeIds = pref->value("wsn/rootNodeIds").value< QList<int> >().toSet();
-	QList<int> ns = pref->value("wsn/nodeIds").value< QList<int> >();
-	QList<int> ps = pref->value("wsn/parentIds").value< QList<int> >();
-	for (int i = 0; i < ns.size(); i++)
-		p->nodeAndParentIds.insert(ns[i], ps[i]);
+	WsnParams p;
+	p.maxTier = pref->value("wsn/maxTier").toInt();
+
+	QStringList roots = pref->value("wsn/rootNodeIds").toStringList();
+	QStringList nodes = pref->value("wsn/nodeIds").toStringList();
+	QStringList parents = pref->value("wsn/parentIds").toStringList();
+
+	for (int i = 0; i < roots.size(); i++)
+		p.rootNodeIds.insert(roots[i].toInt());
+	for (int i = 0; i < nodes.size(); i++)
+		p.nodeAndParentIds.insert(nodes[i].toInt(), parents[i].toInt());
+
+	if (p.rootNodeIds.size() > 0)
+		p.hasRootNodes = true;
+
+	return p;
 }

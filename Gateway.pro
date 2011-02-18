@@ -17,7 +17,8 @@ SOURCES += main.cpp\
     StatusView.cpp \
     FMacPacketParser.cpp \
     GsmModule.cpp \
-    GsmModuleController.cpp
+    GsmModuleController.cpp \
+    MainView.cpp
 
 HEADERS  += Window.h \
     MainController.h \
@@ -27,6 +28,7 @@ HEADERS  += Window.h \
     FMacPacketParser.h \
     PacketSlots.h \
     GsmModule.h \
-    GsmModuleController.h
+    GsmModuleController.h \
+    MainView.h
 
 FORMS    +=

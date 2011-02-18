@@ -1,11 +1,12 @@
 #include "Window.h"
 #include <QLabel>
+#include "MainView.h"
 #include "StatusView.h"
 
 Window::Window(QWidget *parent) : QTabWidget(parent)
 {
-    buildElements();
 	initMembers();
+	this->setWindowTitle("WSN Embedded Gateway");
     this->showMaximized();
 	this->show();
 }
@@ -14,19 +15,13 @@ Window::~Window()
 {
 }
 
-void Window::buildElements()
-{
-	status = new StatusView(this);
-
-    this->addTab(new QLabel("Main"), "Main");
-    this->addTab(new QLabel("Weather"), "Weather");
-	this->addTab(status, "Status");
-    this->addTab(new QLabel("Settings"), "Settings");
-}
-
 void Window::initMembers()
 {
-	connect(status, SIGNAL(clearClicked()), this, SIGNAL(clearLogTriggered()));
-	connect(status, SIGNAL(deployClicked()), this, SIGNAL(deployTriggered()));
-	connect(status, SIGNAL(collectClicked()), this, SIGNAL(collectTriggered()));
+	main = new MainView(this);
+	status = new StatusView(this);
+
+	this->addTab(main, "Main");
+	this->addTab(new QLabel("Weather"), "Weather");
+	this->addTab(status, "Status");
+	this->addTab(new QLabel("Settings"), "Settings");
 }

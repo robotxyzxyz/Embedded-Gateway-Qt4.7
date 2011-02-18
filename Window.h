@@ -2,6 +2,7 @@
 #define WINDOW_H
 
 #include <QTabWidget>
+class MainView;
 class StatusView;
 
 class Window : public QTabWidget
@@ -12,6 +13,10 @@ public:
 	explicit Window(QWidget *parent = 0);
 	virtual ~Window();
 
+	MainView *mainTab() const
+	{
+		return main;
+	}
 	StatusView *statusTab() const
 	{
 		return status;
@@ -19,16 +24,11 @@ public:
 
 public slots:
 
-signals:
-	void clearLogTriggered();
-	void deployTriggered();
-	void collectTriggered();
-
 private slots:
-    void buildElements();
 	void initMembers();
 
 private:
+	MainView *main;
 	StatusView *status;
 };
 

@@ -43,6 +43,8 @@ public:
     explicit MainController(QObject *parent = 0);
 	virtual ~MainController();
 
+	static const int DEPLOY_FAILURE_RESET_THRESHOLD = 3;
+
 public slots:
 
 signals:
@@ -84,6 +86,7 @@ private:
 	QList<int> rootNodeIdsToCollect;
 	int step;
 	bool stepSatisfied;
+	int timesDeployFailed;
 };
 
 #endif // MAINCONTROLLER_H

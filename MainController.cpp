@@ -69,6 +69,8 @@ void MainController::initMembers()
 	connect(sleepCheckTimer, SIGNAL(timeout()), this, SLOT(deployNetwork()));
 	sleepCheckTimer->start(45 * 60 * 1000);
 
+	timesDeployFailed = 0;
+
 	// Connect packet receiving to parsing
 	connect(baseNode, SIGNAL(receivedPacket(QList<uint8_t>)),
 			&packParser, SLOT(processPacket(QList<uint8_t>)));
@@ -99,6 +101,11 @@ void MainController::deployNetwork()
 	wsnFlowTimer->stop();
 	clearLog();
 	step = WSN_STEP_NOT_DEPLOYED;
+
+	if (timesDeployFailed >= DEPLOY_FAILURE_RESET_THRESHOLD)
+		system("reboot");
+	else
+		timesDeployFailed++;
 
 	stepSatisfied = false;
 
@@ -193,6 +200,8 @@ void MainController::wsnFlowFired()
 		// Save deploy params, then wait 10 seconds before collecting data
 		preferences->saveDeployParams(wsnParams);
 		window->mainTab()->setDeployedNodes(wsnParams.nodeAndParentIds.keys());
+
+		timesDeployFailed = 0;
 		QTimer::singleShot(10000, this, SLOT(collectData()));
 		log("Will collect in 10 seconds...");
 	}

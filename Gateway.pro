@@ -18,7 +18,9 @@ SOURCES += main.cpp\
     FMacPacketParser.cpp \
     GsmModule.cpp \
     GsmModuleController.cpp \
-    MainView.cpp
+    MainView.cpp \
+    SettingsView.cpp \
+    Preferences.cpp
 
 HEADERS  += Window.h \
     MainController.h \
@@ -29,6 +31,8 @@ HEADERS  += Window.h \
     PacketSlots.h \
     GsmModule.h \
     GsmModuleController.h \
-    MainView.h
+    MainView.h \
+    SettingsView.h \
+    Preferences.h
 
 FORMS    +=

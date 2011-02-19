@@ -3,6 +3,8 @@
 
 #include <QTabWidget>
 class MainView;
+class Preferences;
+class SettingsView;
 class StatusView;
 
 class Window : public QTabWidget
@@ -10,7 +12,7 @@ class Window : public QTabWidget
     Q_OBJECT
 
 public:
-	explicit Window(QWidget *parent = 0);
+	explicit Window(Preferences *p, QWidget *parent = 0);
 	virtual ~Window();
 
 	MainView *mainTab() const
@@ -25,11 +27,12 @@ public:
 public slots:
 
 private slots:
-	void initMembers();
+	void initMembers(Preferences *p);
 
 private:
 	MainView *main;
 	StatusView *status;
+	SettingsView *settings;
 };
 
 #endif // WINDOW_H

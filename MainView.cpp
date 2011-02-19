@@ -1,5 +1,7 @@
 #include "MainView.h"
+#include <QDateTime>
 #include <QHBoxLayout>
+#include <QLCDNumber>
 #include <QLineEdit>
 #include <QLabel>
 #include <QProgressBar>
@@ -9,10 +11,13 @@ MainView::MainView(QWidget *parent) : QWidget(parent)
 {
 	initMembers();
 	layoutElements();
+	QObject::startTimer(1000);
 }
 
 void MainView::initMembers()
 {
+	systemTime = new QLabel(getSystemTimeString(), this);
+
 	deployedNodeIds = new QLabel(this);
 	collectedNodeIds = new QLabel(this);
 	gsmSignalQuality = new QProgressBar(this);
@@ -23,6 +28,10 @@ void MainView::initMembers()
 
 void MainView::layoutElements()
 {
+	QHBoxLayout *sysTime = new QHBoxLayout();
+	sysTime->addStretch(1);
+	sysTime->addWidget(new QLabel("System time:", this), 0);
+	sysTime->addWidget(systemTime, 0);
 
 	QVBoxLayout *deployedNodes = new QVBoxLayout();
 	deployedNodes->setSpacing(0);
@@ -40,6 +49,7 @@ void MainView::layoutElements()
 	gsmSignal->addWidget(gsmSignalQuality, 0);
 
 	QVBoxLayout *whole = new QVBoxLayout();
+	whole->addLayout(sysTime, 0);
 	whole->addLayout(deployedNodes, 0);
 	whole->addSpacing(10);
 	whole->addLayout(collectedNodes, 0);
@@ -47,6 +57,11 @@ void MainView::layoutElements()
 	whole->addStretch(1);
 	whole->addLayout(gsmSignal, 0);
 	setLayout(whole);
+}
+
+void MainView::timerEvent(QTimerEvent *)
+{
+	systemTime->setText(getSystemTimeString());
 }
 
 void MainView::setDeployedNodes(QList<int> ns)
@@ -77,4 +92,9 @@ void MainView::setGsmSignalQuality(int sq)
 		gsmSignalQuality->setValue(-1);
 	else
 		gsmSignalQuality->setValue(sq);
+}
+
+QString MainView::getSystemTimeString()
+{
+	return QDateTime::currentDateTime().toString("yyyy-MM-dd HH:mm:ss");
 }

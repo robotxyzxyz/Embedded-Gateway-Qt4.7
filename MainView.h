@@ -4,7 +4,6 @@
 #include <QWidget>
 #include <QList>
 class QLabel;
-class QLineEdit;
 class QProgressBar;
 
 class MainView : public QWidget
@@ -21,10 +20,15 @@ public slots:
 
 signals:
 
+protected:
+	void timerEvent(QTimerEvent *e);
+
 private:
 	void initMembers();
 	void layoutElements();
+	QString getSystemTimeString();
 
+	QLabel *systemTime;
 	QLabel *deployedNodeIds;
 	QLabel *collectedNodeIds;
 	QProgressBar *gsmSignalQuality;

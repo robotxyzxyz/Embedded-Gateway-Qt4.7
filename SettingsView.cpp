@@ -45,10 +45,10 @@ void SettingsView::layoutElements()
 
 	QVBoxLayout *sTm = new QVBoxLayout();
 	QString label("Set system time");
-	label.append(" (yyyy-MM-dd HH:mm:ss, or leave blank to use current setting.");
-	label.append(" Only works with superuser permission)");
+	label.append(" (yyyy-MM-dd HH:mm:ss, or leave blank for current setting.)");
 	sTm->addWidget(new QLabel(label, this), 0);
 	sTm->addWidget(systemTime, 0);
+	sTm->addWidget(new QLabel("Only works with superuser permission", this));
 
 	QGridLayout *gateway = new QGridLayout();
 	gateway->addLayout(gId, 0, 0);
@@ -76,9 +76,9 @@ void SettingsView::layoutElements()
 	serialGroup->setLayout(serials);
 
 	// Apply button
-	QHBoxLayout *applyRow = new QHBoxLayout();
-	applyRow->addStretch(1);
-	applyRow->addWidget(apply, 0);
+	QHBoxLayout *buttons = new QHBoxLayout();
+	buttons->addStretch(1);
+	buttons->addWidget(apply, 0);
 
 	// Layout group boxes and apply button
 	QVBoxLayout *whole = new QVBoxLayout();
@@ -86,7 +86,7 @@ void SettingsView::layoutElements()
 	whole->addWidget(gatewayGroup, 0);
 	whole->addWidget(serialGroup, 0);
 	whole->addStretch(1);
-	whole->addLayout(applyRow, 0);
+	whole->addLayout(buttons, 0);
 	setLayout(whole);
 }
 

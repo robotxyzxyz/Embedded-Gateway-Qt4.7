@@ -60,14 +60,14 @@ void MainController::initMembers()
 	wsnFlowTimer->setSingleShot(true);
 	connect(wsnFlowTimer, SIGNAL(timeout()), this, SLOT(wsnFlowFired()));
 
-	// sleepCheckTimer is a 45-minute timer to check whether the network collects
+	// sleepCheckTimer is a 35-minute timer to check whether the network collects
 	//  data periodically
 	// If the network doesn't do anything for 45 minutes, something is wrong
 	// This timer is stopped when collectData() or deployNetwork() is called
 	sleepCheckTimer = new QTimer(this);
 	sleepCheckTimer->setSingleShot(true);
 	connect(sleepCheckTimer, SIGNAL(timeout()), this, SLOT(deployNetwork()));
-	sleepCheckTimer->start(45 * 60 * 1000);
+	sleepCheckTimer->start(SLEEP_CHECK_TIMER_MILISECONDS);
 
 	timesDeployFailed = 0;
 
@@ -274,9 +274,9 @@ void MainController::wsnFlowFired()
 		log("Data collection finished");
 
 		// Start a 35-minute timer to check if the network has collected data
-		// If the network doesn't do anything for 45 minutes, something is wrong
+		// If the network doesn't do anything for 35 minutes, something is wrong
 		// This timer is stopped when collectData() or deployNetwork() is called
-		sleepCheckTimer->start(45 * 60 * 1000);
+		sleepCheckTimer->start(SLEEP_CHECK_TIMER_MILISECONDS);
 	}
 	else
 	{
@@ -423,6 +423,8 @@ void MainController::wakeNetwork()
 {
 	// Tell the nodes the gateway is awake
 	baseNode->sendPacket(PACKET_IS_AWAKE);
+
+	sleepCheckTimer->stop();
 
 	// Wait for reroute command
 	if (!stepSatisfied)

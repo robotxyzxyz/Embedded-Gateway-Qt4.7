@@ -17,9 +17,9 @@ public:
 		return serialPath;
 	}
 
-	static const int SERIAL_OPEN_ERROR = -1;// Inability to open serial port
-	static const int SERIAL_WRITE_ERROR = 0;// Inability to write to serial
-	static const int SERIAL_READ_ERROR = 1;	// Inability to read from serial
+	static const int Serial_Open_Error = -1;// Inability to open serial port
+	static const int Serial_Write_Error = 0;// Inability to write to serial
+	static const int Serial_Read_Error = 1;	// Inability to read from serial
 
 signals:
 	void occuredError(const int errorCode);

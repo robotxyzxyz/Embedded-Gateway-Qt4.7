@@ -15,25 +15,27 @@ class BaseNode;
 class GsmModuleController;
 class Window;
 
-enum WsnSteps
+namespace WsnSteps
 {
-	WSN_STEP_NOT_DEPLOYED						= -2,
-	WSN_STEP_DEPLOY_START						= -1,
-	WSN_STEP_DEPLOY_RESET						=  0,
-	WSN_STEP_DEPLOY_REQUEST_PATH				= 11,
-	WSN_STEP_DEPLOY_DISTRIBUTE_TIME_SLOTS		,
-	WSN_STEP_DEPLOY_FINISH					,
-	WSN_STEP_HAS_DEPLOYED						,
-	WSN_STEP_NOT_COLLECTED					,
-	WSN_STEP_COLLECT_START					,
-	WSN_STEP_COLLECT_REQUEST					,
-	WSN_STEP_COLLECT_REQUESTING				,
-	WSN_STEP_COLLECT_WAIT_TO_RECEIVE			,
-	WSN_STEP_SYNCHRONIZE						,
-	WSN_STEP_SUPPLEMENTAL_COLLECT_AND_SLEEP	,
-	WSN_STEP_COLLECT_FINISH					,
-};
-
+	enum WsnSteps
+	{
+		Not_Deployed						= -2,
+		Deploy_Start						= -1,
+		Deploy_Reset						=  0,
+		Deploy_Request_Path				= 11,
+		Deploy_Distribute_Time_Slots		,
+		Deploy_Finish					,
+		Has_Deployed						,
+		Not_Collected					,
+		Collect_Start					,
+		Collect_Request					,
+		Collect_Requesting				,
+		Collect_Wait_To_Receive			,
+		Synchronize						,
+		Supplemental_Collect_And_Sleep	,
+		Collect_Finish					,
+	};
+}
 
 class MainController : public QObject
 {
@@ -43,8 +45,8 @@ public:
     explicit MainController(QObject *parent = 0);
 	virtual ~MainController();
 
-	static const int DEPLOY_FAILURE_RESET_THRESHOLD = 3;
-	static const int SLEEP_CHECK_TIMER_MILISECONDS = 35 * 60 * 1000;
+	static const int Deploy_Failure_Reboot_Threshold = 3;
+	static const int Sleep_Check_Timer_Interval_Milliseconds = 35 * 60 * 1000;
 
 public slots:
 

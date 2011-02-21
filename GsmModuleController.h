@@ -19,7 +19,7 @@ public:
 		return device;
 	}
 
-	static const int MODULE_TIMED_OUT_ERROR = 11;
+	static const int Module_Timed_Out_Error = 11;
 
 signals:
 	/*********** IMPORTANT: Some error codes are in GsmMoudle.h *************/

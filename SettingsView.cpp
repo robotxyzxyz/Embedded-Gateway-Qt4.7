@@ -128,7 +128,7 @@ void SettingsView::onApplyClicked()
 		{
 			QString dateString = dt.toString("MMddHHmmyyyy.ss");
 			dateString.prepend("date ");
-			system(dateString.toAscii().data());
+			(void) system(dateString.toAscii().data());
 		}
 	}
 }

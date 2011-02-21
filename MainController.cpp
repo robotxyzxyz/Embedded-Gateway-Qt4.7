@@ -103,7 +103,7 @@ void MainController::deployNetwork()
 	step = WSN_STEP_NOT_DEPLOYED;
 
 	if (timesDeployFailed >= DEPLOY_FAILURE_RESET_THRESHOLD)
-		system("reboot");
+		(void) system("reboot") < 0
 	else
 		timesDeployFailed++;
 

@@ -493,7 +493,7 @@ void MainController::sendDataSmss()
 	QList<int> nodeIds = wsnParams.dataOfNodeIds.keys();
 	qSort(nodeIds.begin(), nodeIds.end());
 	QDateTime now = QDateTime::currentDateTime();
-	QString timeString = now.toString("yyyy,MM,dd,hh,mm,ss;");
+	QString timeString = now.toString("yyyy,M,d,h,m,s;");
 	for (int i = 0; i < smsCount; i++)
 	{
 		// Construct header

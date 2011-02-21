@@ -105,7 +105,7 @@ void MainController::deployNetwork()
 
 	if (timesDeployFailed >= Deploy_Failure_Reboot_Threshold)
 		if (system("reboot") != 0)
-			emit occurError(GlobalErrors::Reboot_Error);
+			emit occuredError(GlobalErrors::Reboot_Error);
 	else
 		timesDeployFailed++;
 

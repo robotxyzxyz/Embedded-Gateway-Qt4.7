@@ -33,6 +33,7 @@ HEADERS  += Window.h \
     GsmModuleController.h \
     MainView.h \
     SettingsView.h \
-    Preferences.h
+    Preferences.h \
+    GlobalErrorCodes.h
 
 FORMS    +=

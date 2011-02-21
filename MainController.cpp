@@ -6,6 +6,7 @@
 #include <QTimer>
 #include <QtAlgorithms>
 #include "BaseNode.h"
+#include "GlobalErrorCodes.h"
 #include "GsmModuleController.h"
 #include "MainView.h"
 #include "Packets.h"
@@ -103,7 +104,8 @@ void MainController::deployNetwork()
 	step = WsnSteps::Not_Deployed;
 
 	if (timesDeployFailed >= Deploy_Failure_Reboot_Threshold)
-		(void) system("reboot");
+		if (system("reboot") != 0)
+			emit occurError(GlobalErrors::Reboot_Error);
 	else
 		timesDeployFailed++;
 

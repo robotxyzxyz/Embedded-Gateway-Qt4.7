@@ -7,6 +7,7 @@
 #include <QLineEdit>
 #include <QPushButton>
 #include <QVBoxLayout>
+#include "GlobalErrorCodes.h"
 #include "Preferences.h"
 
 SettingsView::SettingsView(Preferences *p, QWidget *parent) : QWidget(parent)
@@ -128,7 +129,8 @@ void SettingsView::onApplyClicked()
 		{
 			QString dateString = dt.toString("MMddHHmmyyyy.ss");
 			dateString.prepend("date ");
-			(void) system(dateString.toAscii().data());
+			if (system(dateString.toAscii().data()) != 0)
+				emit occuredError(GlobalErrors::Set_Date_Error);
 		}
 	}
 }

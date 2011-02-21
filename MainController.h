@@ -51,6 +51,7 @@ public:
 public slots:
 
 signals:
+	void occuredError(int errorCode);
 
 protected:
 	void timerEvent(QTimerEvent *e);

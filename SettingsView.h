@@ -14,6 +14,7 @@ public:
 	explicit SettingsView(Preferences *p, QWidget *parent = 0);
 
 signals:
+	void occuredError(int errorCode);
 
 public slots:
 

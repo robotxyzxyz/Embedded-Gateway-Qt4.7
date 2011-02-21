@@ -67,7 +67,7 @@ void MainController::initMembers()
 	sleepCheckTimer = new QTimer(this);
 	sleepCheckTimer->setSingleShot(true);
 	connect(sleepCheckTimer, SIGNAL(timeout()), this, SLOT(deployNetwork()));
-	sleepCheckTimer->start(SLEEP_CHECK_TIMER_MILISECONDS);
+	sleepCheckTimer->start(Sleep_Check_Timer_Interval_Milliseconds);
 
 	timesDeployFailed = 0;
 
@@ -100,9 +100,9 @@ void MainController::deployNetwork()
 	sleepCheckTimer->stop();
 	wsnFlowTimer->stop();
 	clearLog();
-	step = WSN_STEP_NOT_DEPLOYED;
+	step = WsnSteps::Not_Deployed;
 
-	if (timesDeployFailed >= DEPLOY_FAILURE_RESET_THRESHOLD)
+	if (timesDeployFailed >= Deploy_Failure_Reboot_Threshold)
 		(void) system("reboot");
 	else
 		timesDeployFailed++;
@@ -121,21 +121,21 @@ void MainController::deployNetwork()
 void MainController::wsnFlowFired()
 {
 	step++;
-	if (step == WSN_STEP_DEPLOY_START)
+	if (step == WsnSteps::Deploy_Start)
 	{
 		log(QString("Will deploy via ") + baseNode->path());
 		wsnFlowTimer->start(1000);
 	}
-	else if (step == WSN_STEP_DEPLOY_RESET)
+	else if (step == WsnSteps::Deploy_Reset)
 	{
 		log("Nodes will reset...");
-		baseNode->sendPacket(PACKET_RESET);
+		baseNode->sendPacket(Packets::Reset);
 		wsnFlowTimer->start(5000);
 	}
-	else if (step < WSN_STEP_DEPLOY_REQUEST_PATH)
+	else if (step < WsnSteps::Deploy_Request_Path)
 	{
 		// Print the one-time Phrase start
-		// Flag used here is reset in the next step (WSN_DEPLOY_REQUEST_PATH)
+		// Flag used here is reset in the next step (Deploy_Request_Path)
 		if (!stepSatisfied)
 		{
 			log("\nSending deploy command: ", false);
@@ -143,21 +143,21 @@ void MainController::wsnFlowFired()
 		}
 
 		// Print count of deploy command
-		log(QString::number(step - WSN_STEP_DEPLOY_RESET) + " ", false);
+		log(QString::number(step - WsnSteps::Deploy_Reset) + " ", false);
 
 		// Send the command
-		baseNode->sendPacket(PACKET_START_DEPLOY);
+		baseNode->sendPacket(Packets::Start_Deploy);
 
 		// Run timer
 		wsnFlowTimer->start(1000);
 	}
-	else if (step == WSN_STEP_DEPLOY_REQUEST_PATH)
+	else if (step == WsnSteps::Deploy_Request_Path)
 	{
-		// Reset flag used in previous step (WSN_DEPLOY_REQUEST_PATH)
+		// Reset flag used in previous step
 		stepSatisfied = false;
 
 		log("Requesting for path");
-		baseNode->sendPacket(PACKET_REQUEST_PATH);
+		baseNode->sendPacket(Packets::Request_Path);
 		wsnFlowTimer->start(10000);
 		// Now wait for max tier packets and path return packets
 		// The minimum wait time is 10s, and if no-one returns this path
@@ -166,7 +166,7 @@ void MainController::wsnFlowFired()
 		//  are received for more than 3 seconds
 		// See comments in setMaxTier() and addPath()
 	}
-	else if (step == WSN_STEP_DEPLOY_DISTRIBUTE_TIME_SLOTS)
+	else if (step == WsnSteps::Deploy_Distribute_Time_Slots)
 	{
 		// First check for the path result from the previous step
 		// Reroute in 3 seconds if the path and tier settings are not complete
@@ -179,7 +179,7 @@ void MainController::wsnFlowFired()
 		}
 
 		// Ask nodes to distribute time slots, thus finish deploying
-		baseNode->sendPacket(PACKET_DISTRIBUTE_TIME_SLOTS);
+		baseNode->sendPacket(Packets::Distribute_Time_Slots);
 		QString s;
 		s.sprintf("Deployment finished for %d nodes",
 				  wsnParams.nodeAndParentIds.size());
@@ -187,7 +187,7 @@ void MainController::wsnFlowFired()
 
 		wsnFlowTimer->start(100);
 	}
-	else if (step == WSN_STEP_DEPLOY_FINISH)
+	else if (step == WsnSteps::Deploy_Finish)
 	{
 		// Return the deployment info via SMS
 		log("Returning path info...");
@@ -195,7 +195,7 @@ void MainController::wsnFlowFired()
 		preferences->setIsDeployed(true);
 		wsnFlowTimer->start(1);
 	}
-	else if (step == WSN_STEP_HAS_DEPLOYED)
+	else if (step == WsnSteps::Has_Deployed)
 	{
 		// Save deploy params, then wait 10 seconds before collecting data
 		preferences->saveDeployParams(wsnParams);
@@ -205,57 +205,57 @@ void MainController::wsnFlowFired()
 		QTimer::singleShot(10000, this, SLOT(collectData()));
 		log("Will collect in 10 seconds...");
 	}
-	else if (step == WSN_STEP_COLLECT_START)
+	else if (step == WsnSteps::Collect_Start)
 	{
 		log("Ordering first-tier nodes to collect data");
 		wsnParams.dataOfNodeIds.clear();
-		baseNode->sendPacket(PACKET_COLLECT_START);
+		baseNode->sendPacket(Packets::Collect_Start);
 
 		wsnFlowTimer->start(5000);
 	}
-	else if (step == WSN_STEP_COLLECT_REQUEST)
+	else if (step == WsnSteps::Collect_Request)
 	{
 		log("Requesting data from first-tier nodes");
 		rootNodeIdsToCollect = wsnParams.rootNodeIds.toList();
 
 		wsnFlowTimer->start(1);
 	}
-	else if (step == WSN_STEP_COLLECT_REQUESTING)
+	else if (step == WsnSteps::Collect_Requesting)
 	{
 		int thisId = rootNodeIdsToCollect.takeFirst();
 		log("Sending request to node " + QString::number(thisId));
-		QList<uint8_t> req = PACKET_COLLECT_REQUEST;
-		req[GATEWAY_PACKET_RECEIVER] = (uint8_t)thisId;
+		QList<uint8_t> req = Packets::Collect_Request;
+		req[GatewayPacket::Receiver] = (uint8_t)thisId;
 		baseNode->sendPacket(req);
 		if (!rootNodeIdsToCollect.isEmpty())
 			step--;
 
 		wsnFlowTimer->start(5000);
 	}
-	else if (step == WSN_STEP_COLLECT_WAIT_TO_RECEIVE)
+	else if (step == WsnSteps::Collect_Wait_To_Receive)
 	{
 		log("All requests sent, waiting for data...");
 		wsnFlowTimer->start(10000);
 	}
-	else if (step == WSN_STEP_SYNCHRONIZE)
+	else if (step == WsnSteps::Synchronize)
 	{
 		log("Sending synchronization command");
-		baseNode->sendPacket(PACKET_SYNCHRONIZE);
+		baseNode->sendPacket(Packets::Synchronize);
 		wsnFlowTimer->start(5000);
 	}
-	else if (step == WSN_STEP_SUPPLEMENTAL_COLLECT_AND_SLEEP)
+	else if (step == WsnSteps::Supplemental_Collect_And_Sleep)
 	{
-		QList<uint8_t> slp = PACKET_SLEEP;
+		QList<uint8_t> slp = Packets::Sleep;
 		uint16_t timeToSleep = getTimeToSleep();
-		slp[GATEWAY_PACKET_SLEEP_TIME_HI] = timeToSleep / 0x100;
-		slp[GATEWAY_PACKET_SLEEP_TIME_LO] = timeToSleep % 0x100;
+		slp[GatewayPacket::Sleep_Time_Hi] = timeToSleep / 0x100;
+		slp[GatewayPacket::Sleep_Time_Lo] = timeToSleep % 0x100;
 		baseNode->sendPacket(slp);
 		log("Nodes will sleep for " +
 			QString::number(timeToSleep) +
 			" seconds after supplemental collection");
 		wsnFlowTimer->start(5000);
 	}
-	else if (step == WSN_STEP_COLLECT_FINISH)
+	else if (step == WsnSteps::Collect_Finish)
 	{
 		wsnFlowTimer->stop();
 		if (wsnParams.dataOfNodeIds.isEmpty())
@@ -276,7 +276,7 @@ void MainController::wsnFlowFired()
 		// Start a 35-minute timer to check if the network has collected data
 		// If the network doesn't do anything for 35 minutes, something is wrong
 		// This timer is stopped when collectData() or deployNetwork() is called
-		sleepCheckTimer->start(SLEEP_CHECK_TIMER_MILISECONDS);
+		sleepCheckTimer->start(Sleep_Check_Timer_Interval_Milliseconds);
 	}
 	else
 	{
@@ -295,9 +295,9 @@ void MainController::collectData()
 	clearLog();
 
 	if (isNetworkCollectable())
-		step = WSN_STEP_NOT_COLLECTED;
+		step = WsnSteps::Not_Collected;
 	else
-		step = WSN_STEP_NOT_DEPLOYED;
+		step = WsnSteps::Not_Deployed;
 
 	wsnFlowTimer->start(1);
 }
@@ -382,9 +382,9 @@ void MainController::addData(NodeData data, bool isSupplemental)
 	// ACK the data packet if needed
 	if (!isSupplemental)
 	{
-		QList<uint8_t> ack = PACKET_COLLECT_ACK;
-		ack[GATEWAY_PACKET_RECEIVER] = data.senderNodeId;
-		ack[GATEWAY_PACKET_DEPTH] = data.dataSourceTier;
+		QList<uint8_t> ack = Packets::Collect_Acknowledgement;
+		ack[GatewayPacket::Receiver] = data.senderNodeId;
+		ack[GatewayPacket::Depth] = data.dataSourceTier;
 		baseNode->sendPacket(ack);
 
 		l = "Data collected from node ";
@@ -422,7 +422,7 @@ uint16_t MainController::getTimeToSleep()
 void MainController::wakeNetwork()
 {
 	// Tell the nodes the gateway is awake
-	baseNode->sendPacket(PACKET_IS_AWAKE);
+	baseNode->sendPacket(Packets::Awake);
 
 	sleepCheckTimer->stop();
 
@@ -431,7 +431,7 @@ void MainController::wakeNetwork()
 	{
 		log("Nodes are awake, checking network status...");
 		stepSatisfied = true;
-		step = WSN_STEP_NOT_COLLECTED;
+		step = WsnSteps::Not_Collected;
 		QTimer::singleShot(5000, this, SLOT(collectData()));
 	}
 }

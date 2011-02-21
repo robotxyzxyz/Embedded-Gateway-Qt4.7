@@ -8,7 +8,7 @@ GsmModule::GsmModule(QString path, QObject *parent) : QObject(parent)
 	initMembers();
 
 	if (initSerial(&path) < 0)
-		emit occuredError(SERIAL_OPEN_ERROR);
+		emit occuredError(Serial_Open_Error);
 }
 
 GsmModule::~GsmModule()
@@ -53,7 +53,7 @@ bool GsmModule::sendCommand(QString command)
 		char c = command[i].toAscii();
 		if (write(fd, &c, 1) != 1)
 		{
-			emit occuredError(SERIAL_WRITE_ERROR);
+			emit occuredError(Serial_Write_Error);
 			return false;
 		}
 	}
@@ -66,7 +66,7 @@ void GsmModule::readData(int fd)
 	char byte;
 	if (read(fd, &byte, 1) != 1)
 	{
-		emit occuredError(SERIAL_READ_ERROR);
+		emit occuredError(Serial_Read_Error);
 		return;
 	}
 

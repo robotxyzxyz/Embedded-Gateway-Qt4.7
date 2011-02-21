@@ -18,11 +18,11 @@ public:
 		return serialPath;
 	}
 
-	static const int SERIAL_OPEN_ERROR = -1;// Inability to open serial port
-	static const int SERIAL_WRITE_ERROR = 0;// Inability to write to serial
-	static const int SERIAL_READ_ERROR = 1;	// Inability to read from serial
-	static const int PACKET_FORM_ERROR = 2;	// Malformed packet
-	static const int PACKET_CRC_ERROR = 3;	// Incorrect CRC
+	static const int Serial_Open_Error = -1;// Inability to open serial port
+	static const int Serial_Write_Error = 0;// Inability to write to serial
+	static const int Serial_Read_Error = 1;	// Inability to read from serial
+	static const int Packet_Form_Error = 2;	// Malformed packet
+	static const int Packet_Crc_Error = 3;	// Incorrect CRC
 
 signals:
 	void occuredError(const int errorCode);

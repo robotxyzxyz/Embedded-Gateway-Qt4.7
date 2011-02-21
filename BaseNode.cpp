@@ -10,7 +10,7 @@ BaseNode::BaseNode(QString path, QObject *parent) : QObject(parent)
 	if (initSerial(&path) < 0)
 	{
 		shouldReceive = false;
-		emit occuredError(SERIAL_OPEN_ERROR);
+		emit occuredError(Serial_Open_Error);
 	}
 }
 
@@ -66,7 +66,7 @@ bool BaseNode::sendPacket(QList<uint8_t> packet)
 	{
 		if (write(fd, &(packet[i]), 1) != 1)
 		{
-			emit occuredError(SERIAL_WRITE_ERROR);
+			emit occuredError(Serial_Write_Error);
 			return false;
 		}
 	}
@@ -81,7 +81,7 @@ void BaseNode::readData(int fd)
 	{
 		shouldReceive = false;
 		is7DBreaking = false;
-		emit occuredError(SERIAL_READ_ERROR);
+		emit occuredError(Serial_Read_Error);
 		return;
 	}
 
@@ -95,7 +95,7 @@ void BaseNode::readData(int fd)
 			if (isCrcCorrect(bufferIn))
 				emit receivedPacket(bufferIn);
 			else
-				emit occuredError(PACKET_CRC_ERROR);
+				emit occuredError(Packet_Crc_Error);
 		}
 		bufferIn.clear();
 		shouldReceive = true;
@@ -115,7 +115,7 @@ void BaseNode::readData(int fd)
 			break;
 		default:
 			shouldReceive = false;
-			emit occuredError(PACKET_FORM_ERROR);
+			emit occuredError(Packet_Form_Error);
 		}
 	}
 	else if (byte == 0x7d)

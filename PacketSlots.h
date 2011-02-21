@@ -1,51 +1,60 @@
 #ifndef PACKETSLOTS_H
 #define PACKETSLOTS_H
 
-enum GatewayPacket
+namespace GatewayPacket
 {
-	GATEWAY_PACKET_GROUP_ID           = 11,
-	GATEWAY_PACKET_CMDFORM            ,
-	GATEWAY_PACKET_RECEIVER           = 14,
-	GATEWAY_PACKET_DEPTH              ,
-	GATEWAY_PACKET_SLEEP_TIME_LO      = 22,
-	GATEWAY_PACKET_SLEEP_TIME_HI      = 23,
-};
+	enum GatewayPacket
+	{
+		Group_Id           = 11,
+		Cmdform            ,
+		Receiver           = 14,
+		Depth              ,
+		Sleep_Time_Lo      = 22,
+		Sleep_Time_Hi      = 23,
+	};
+}
 
-enum NodePacket
+namespace NodePacket
 {
-	NODE_PACKET_GROUP_ID                  = 10,
-	NODE_PACKET_CMDFORM                   ,
-	NODE_PACKET_DATA_SENDER_ID            ,
-	NODE_PACKET_DATA_SOURCE_ID            ,
-	NODE_PACKET_DATA_SOURCE_TIER          ,
-	NODE_PACKET_DATA_PAR_HI_LO            ,
-	NODE_PACKET_DATA_PAR_HI_HI            ,
-	NODE_PACKET_DATA_TEMPERATURE_LO       ,
-	NODE_PACKET_DATA_TEMPERATURE_HI       ,
-	NODE_PACKET_DATA_HUMIDITY_LO          ,
-	NODE_PACKET_DATA_HUMIDITY_HI          ,
-	NODE_PACKET_DATA_PEST_LO              ,
-	NODE_PACKET_DATA_PEST_HI              ,
-	NODE_PACKET_DATA_PAR_LO_LO            ,
-	NODE_PACKET_DATA_PAR_LO_HI            ,
-	/*                                    */
-	NODE_PACKET_DEPLOY_MAX_TIER           = 15,
-	/*                                    */
-	NODE_PACKET_PATH_SENDER_TIER          = 13,
-	NODE_PACKET_PATH_SENDER_ID            ,
-	NODE_PACKET_PATH_SENDER_PARENT_ID     ,
-	NODE_PACKET_PATH_SOURCE_ID            = 19,
-	NODE_PACKET_PATH_SOURCE_PARENT_ID     = 21,
-};
+	enum NodePacket
+	{
+		Droup_Id                  = 10,
+		Cmdform                   ,
+		Data_Sender_Id            ,
+		Data_Source_Id            ,
+		Data_Source_Tier          ,
+		Data_Par_Hi_Lo            ,
+		Data_Par_Hi_Hi            ,
+		Data_Temperature_Lo       ,
+		Data_Temperature_Hi       ,
+		Data_Humidity_Lo          ,
+		Data_Humidity_Hi          ,
+		Data_Pest_Lo              ,
+		Data_Pest_Hi              ,
+		Data_Par_Lo_Lo            ,
+		Data_Par_Lo_Hi            ,
+		/*                        */
+		Deploy_Max_Tier           = 15,
+		/*                        */
+		Path_Sender_Tier          = 13,
+		Path_Sender_Id            ,
+		Path_Sender_Parent_Id     ,
+		Path_Source_Id            = 19,
+		Path_Source_Parent_Id     = 21,
+	};
+}
 
-enum Cmdform
+namespace Cmdform
 {
-	CMD_RETURN_MAX_TIER		= 0x01,
-	CMD_RETURN_PATH			= 0x03,
-	CMD_RETURN_DATA			= 0x21,
-	CMD_SUPP_RETURN_DATA		= 0x49,
-	CMD_NODE_AWAKE			= 0x90,
-	CMD_REQUEST_REROUTE		= 0x91,
-};
+	enum Cmdform
+	{
+		Return_Max_Tier		= 0x01,
+		Return_Path			= 0x03,
+		Return_Data			= 0x21,
+		Supp_Return_Data		= 0x49,
+		Awake				= 0x90,
+		Request_Reroute		= 0x91,
+	};
+}
 
 #endif // PACKETSLOTS_H

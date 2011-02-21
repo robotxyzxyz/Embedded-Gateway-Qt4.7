@@ -7,38 +7,38 @@ FMacPacketParser::FMacPacketParser(QObject *parent) : QObject(parent)
 
 void FMacPacketParser::processPacket(QList<uint8_t> packet)
 {
-	switch (packet[NODE_PACKET_CMDFORM])
+	switch (packet[NodePacket::Cmdform])
 	{
-	case CMD_RETURN_MAX_TIER:
-		emit gotMaxTier(packet[NODE_PACKET_DEPLOY_MAX_TIER]);
+	case Cmdform::Return_Max_Tier:
+		emit gotMaxTier(packet[NodePacket::Deploy_Max_Tier]);
 		break;
 
-	case CMD_RETURN_PATH:
-		if (packet[NODE_PACKET_PATH_SENDER_TIER] == 1)
+	case Cmdform::Return_Path:
+		if (packet[NodePacket::Path_Sender_Tier] == 1)
 			emit gotFirstTierNode();
 
-		emit gotNodePath(packet[NODE_PACKET_PATH_SENDER_ID],
-						 packet[NODE_PACKET_PATH_SENDER_PARENT_ID]);
+		emit gotNodePath(packet[NodePacket::Path_Sender_Id],
+						 packet[NodePacket::Path_Sender_Parent_Id]);
 
-		if (packet[NODE_PACKET_PATH_SOURCE_ID])
-			emit gotNodePath(packet[NODE_PACKET_PATH_SOURCE_ID],
-							 packet[NODE_PACKET_PATH_SOURCE_PARENT_ID],
+		if (packet[NodePacket::Path_Source_Id])
+			emit gotNodePath(packet[NodePacket::Path_Source_Id],
+							 packet[NodePacket::Path_Source_Parent_Id],
 							 true);
 		break;
 
-	case CMD_RETURN_DATA:
+	case Cmdform::Return_Data:
 		emit gotData(getDataOfPacket(packet));
 		break;
 
-	case CMD_SUPP_RETURN_DATA:
+	case Cmdform::Supp_Return_Data:
 		emit gotData(getDataOfPacket(packet), true);
 		break;
 
-	case CMD_NODE_AWAKE:
+	case Cmdform::Awake:
 		emit hadAwakeNode();
 		break;
 
-	case CMD_REQUEST_REROUTE:
+	case Cmdform::Request_Reroute:
 		emit shouldReroute();
 		break;
 	}
@@ -47,19 +47,19 @@ void FMacPacketParser::processPacket(QList<uint8_t> packet)
 NodeData FMacPacketParser::getDataOfPacket(QList<uint8_t> packet)
 {
 	NodeData data;
-	data.senderNodeId = packet[NODE_PACKET_DATA_SENDER_ID];
-	data.dataSourceNodeId = packet[NODE_PACKET_DATA_SOURCE_ID];
-	data.dataSourceTier = packet[NODE_PACKET_DATA_SOURCE_TIER];
-	data.temperature = packet[NODE_PACKET_DATA_TEMPERATURE_HI] * 0x100 +
-					   packet[NODE_PACKET_DATA_TEMPERATURE_LO];
-	data.humidity = packet[NODE_PACKET_DATA_HUMIDITY_HI] * 0x100 +
-					packet[NODE_PACKET_DATA_HUMIDITY_LO];
-	data.pest = packet[NODE_PACKET_DATA_PEST_HI] * 0x100 +
-				packet[NODE_PACKET_DATA_PEST_LO];
-	data.par = packet[NODE_PACKET_DATA_PAR_HI_HI] * 0x1000000 +
-			   packet[NODE_PACKET_DATA_PAR_HI_LO] * 0x10000 +
-			   packet[NODE_PACKET_DATA_PAR_LO_HI] * 0x100 +
-			   packet[NODE_PACKET_DATA_PAR_LO_LO];
+	data.senderNodeId = packet[NodePacket::Data_Sender_Id];
+	data.dataSourceNodeId = packet[NodePacket::Data_Source_Id];
+	data.dataSourceTier = packet[NodePacket::Data_Source_Tier];
+	data.temperature = packet[NodePacket::Data_Temperature_Hi] * 0x100 +
+					   packet[NodePacket::Data_Temperature_Lo];
+	data.humidity = packet[NodePacket::Data_Humidity_Hi] * 0x100 +
+					packet[NodePacket::Data_Humidity_Lo];
+	data.pest = packet[NodePacket::Data_Pest_Hi] * 0x100 +
+				packet[NodePacket::Data_Pest_Lo];
+	data.par = packet[NodePacket::Data_Par_Hi_Hi] * 0x1000000 +
+			   packet[NodePacket::Data_Par_Hi_Lo] * 0x10000 +
+			   packet[NodePacket::Data_Par_Lo_Hi] * 0x100 +
+			   packet[NodePacket::Data_Par_Lo_Lo];
 
 	return data;
 }

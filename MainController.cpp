@@ -104,10 +104,14 @@ void MainController::deployNetwork()
 	step = WsnSteps::Not_Deployed;
 
 	if (timesDeployFailed >= Deploy_Failure_Reboot_Threshold)
+	{
 		if (system("reboot") != 0)
 			emit occuredError(GlobalErrors::Reboot_Error);
+	}
 	else
+	{
 		timesDeployFailed++;
+	}
 
 	stepSatisfied = false;
 

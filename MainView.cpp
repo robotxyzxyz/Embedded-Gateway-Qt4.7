@@ -66,11 +66,15 @@ void MainView::timerEvent(QTimerEvent *)
 
 void MainView::setDeployedNodes(QList<int> ns)
 {
-	QString nodes = QString::number(ns[0]);
-	for (int i = 1; i < ns.size(); i++)
+	QString nodes = "";
+	if (!ns.isEmpty())
 	{
-		nodes.append(", ");
-		nodes.append(QString::number(ns[i]));
+		nodes = QString::number(ns[0]);
+		for (int i = 1; i < ns.size(); i++)
+		{
+			nodes.append(", ");
+			nodes.append(QString::number(ns[i]));
+		}
 	}
 	deployedNodeIds->setText(nodes);
 }

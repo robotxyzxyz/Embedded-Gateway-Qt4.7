@@ -535,7 +535,10 @@ void MainController::loadNetworkParams()
 {
 	log("Detected existing configuration, will resume without deploying");
 	wsnParams = preferences->loadDeployParams();
-	window->mainTab()->setDeployedNodes(wsnParams.nodeAndParentIds.keys());
+	if (!wsnParams.nodeAndParentIds.isEmpty())
+		window->mainTab()->setDeployedNodes(wsnParams.nodeAndParentIds.keys());
+	else
+		QTimer::singleShot(1000, this, SLOT(deployNetwork()));
 }
 
 void MainController::log(QString text, bool inOwnLine)

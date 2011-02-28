@@ -21,7 +21,8 @@ SOURCES += main.cpp\
     MainView.cpp \
     SettingsView.cpp \
     Preferences.cpp \
-    AbstractSerialDevice.cpp
+    AbstractSerialDevice.cpp \
+    WeatherModule.cpp
 
 HEADERS  += Window.h \
     MainController.h \
@@ -36,6 +37,7 @@ HEADERS  += Window.h \
     SettingsView.h \
     Preferences.h \
     GlobalErrorCodes.h \
-    AbstractSerialDevice.h
+    AbstractSerialDevice.h \
+    WeatherModule.h
 
 FORMS    +=

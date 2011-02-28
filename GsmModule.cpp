@@ -1,48 +1,17 @@
 #include "GsmModule.h"
 #include <QSocketNotifier>
-#include <fcntl.h>			// For file control options
-#include <termios.h>		// For termios struct and options
 
-GsmModule::GsmModule(QString path, QObject *parent) : QObject(parent)
+GsmModule::GsmModule(QString path, QObject *parent) : AbstractSerialDevice(path, parent)
 {
 	initMembers();
 
-	if (initSerial(&path) < 0)
+	if (initSerial() < 0)
 		emit occuredError(Serial_Open_Error);
-}
-
-GsmModule::~GsmModule()
-{
-	close(notifier->socket());
-}
-
-int GsmModule::initSerial(QString *path)
-{
-	serialPath = *path;
-	const char *name = path->toAscii().data();
-	int fd = -1;
-	fd = open(name, O_RDWR | O_NOCTTY | O_NONBLOCK);
-	if (fd < 0)
-		return fd;
-
-	termios options;
-	memset(&options, 0, sizeof(options));
-	options.c_iflag = IGNPAR | IGNBRK;
-	options.c_cflag = B115200 | CS8 | CREAD | CLOCAL;
-	cfsetispeed(&options, B115200);
-	cfsetospeed(&options, B115200);		// Not sure if needed under Linux...
-	tcflush(fd, TCIFLUSH);
-	if (tcsetattr(fd, TCSAFLUSH, &options) != 0)
-		return -1;
-
-	notifier = new QSocketNotifier(fd, QSocketNotifier::Read, this);
-	connect(notifier, SIGNAL(activated(int)), this, SLOT(readData(int)));
-
-	return fd;
 }
 
 void GsmModule::initMembers()
 {
+	baud = B115200;
 }
 
 bool GsmModule::sendCommand(QString command)

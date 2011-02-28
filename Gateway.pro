@@ -20,7 +20,8 @@ SOURCES += main.cpp\
     GsmModuleController.cpp \
     MainView.cpp \
     SettingsView.cpp \
-    Preferences.cpp
+    Preferences.cpp \
+    AbstractSerialDevice.cpp
 
 HEADERS  += Window.h \
     MainController.h \
@@ -34,6 +35,7 @@ HEADERS  += Window.h \
     MainView.h \
     SettingsView.h \
     Preferences.h \
-    GlobalErrorCodes.h
+    GlobalErrorCodes.h \
+    AbstractSerialDevice.h
 
 FORMS    +=

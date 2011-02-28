@@ -1,51 +1,20 @@
 #include "BaseNode.h"
 #include <QSocketNotifier>
-#include <fcntl.h>			// For file control options
-#include <termios.h>		// For termios struct and options
 
-BaseNode::BaseNode(QString path, QObject *parent) : QObject(parent)
+BaseNode::BaseNode(QString path, QObject *parent) : AbstractSerialDevice(path, parent)
 {
 	initMembers();
 
-	if (initSerial(&path) < 0)
+	if (initSerial() < 0)
 	{
 		shouldReceive = false;
 		emit occuredError(Serial_Open_Error);
 	}
 }
 
-BaseNode::~BaseNode()
-{
-	close(notifier->socket());
-}
-
-int BaseNode::initSerial(QString *path)
-{
-	serialPath = *path;
-	const char *name = path->toAscii().data();
-	int fd = -1;
-	fd = open(name, O_RDWR | O_NOCTTY | O_NONBLOCK);
-	if (fd < 0)
-		return fd;
-
-	termios options;
-	memset(&options, 0, sizeof(options));
-	options.c_iflag = IGNPAR | IGNBRK;
-	options.c_cflag = B57600 | CS8 | CREAD | CLOCAL;
-	cfsetispeed(&options, B57600);
-	cfsetospeed(&options, B57600);		// Not sure if needed under Linux...
-	tcflush(fd, TCIFLUSH);
-	if (tcsetattr(fd, TCSAFLUSH, &options) != 0)
-		return -1;
-
-	notifier = new QSocketNotifier(fd, QSocketNotifier::Read, this);
-	connect(notifier, SIGNAL(activated(int)), this, SLOT(readData(int)));
-
-	return fd;
-}
-
 void BaseNode::initMembers()
 {
+	baud = B57600;
 	shouldReceive = true;
 	is7DBreaking = false;
 }

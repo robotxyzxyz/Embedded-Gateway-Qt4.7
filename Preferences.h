@@ -25,12 +25,17 @@ public:
 	void saveDeployParams(WsnParams p);
 	WsnParams loadDeployParams();
 
+	static const int Collects_Per_Hour_Minimum = 1;
+	static const int Collects_Per_Hour_Maximum = 30;
+	static const int Collects_Per_Hour_Default = 2;
+
 	// Setters
 	void setNodePort(QString p);
 	void setGsmPort(QString p);
 	void setServerPhone(QString p);
 	void setIsDeployed(bool d);
 	void setGatewayId(int id);
+	void setCollectsPerHour(int c);
 
 	// Getters
 	QString nodePort() const;
@@ -48,10 +53,15 @@ public:
 	{
 		return fileLoc;
 	}
+	inline int collectsPerHour() const
+	{
+		return mCollectsPerHour;
+	}
 
 private:
 	QString fileLoc;
 	QSettings *pref;
+	int mCollectsPerHour;
 	QString mNodePort;
 	QString mGsmPort;
 	QString mServerPhone;

@@ -6,6 +6,7 @@ AbstractSerialDevice::AbstractSerialDevice(QString path, QObject *parent) : QObj
 {
 	serialPath = path;
 	baud = B0;
+	valid = false;
 }
 
 AbstractSerialDevice::~AbstractSerialDevice()

@@ -10,6 +10,10 @@ BaseNode::BaseNode(QString path, QObject *parent) : AbstractSerialDevice(path, p
 		shouldReceive = false;
 		emit occuredError(Serial_Open_Error);
 	}
+	else
+	{
+		valid = true;
+	}
 }
 
 void BaseNode::initMembers()
@@ -21,6 +25,9 @@ void BaseNode::initMembers()
 
 bool BaseNode::sendPacket(QList<uint8_t> packet)
 {
+	if (!valid)
+		return false;
+
 	int size = packet.size();
 	uint16_t crc = getCrcOfPacket(packet);
 	packet[size - 2] = crc % 0x100;

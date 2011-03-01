@@ -31,6 +31,12 @@ Preferences::Preferences()
 	if (mServerPhone == "")
 		setServerPhone(QString::fromAscii("0952650121"));
 
+	// Collects per hour
+	mCollectsPerHour = pref->value("gateway/collectsPerHour").toInt();
+	if (mCollectsPerHour < Collects_Per_Hour_Minimum ||
+		mCollectsPerHour > Collects_Per_Hour_Maximum	)
+		setCollectsPerHour(Collects_Per_Hour_Default);
+
 	// Finally, check if the network has already been deployed
 	// If the setting is not set, the value would be false, so we don't need
 	//  to check to generate it
@@ -69,6 +75,14 @@ void Preferences::setGatewayId(int id)
 {
 	mGatewayId = id;
 	pref->setValue("gateway/gatewayId", QVariant(mGatewayId));
+}
+
+void Preferences::setCollectsPerHour(int c)
+{
+	if (c < Collects_Per_Hour_Minimum || c > Collects_Per_Hour_Maximum)
+		return;
+	mCollectsPerHour = c;
+	pref->setValue("gateway/collectsPerHour", QVariant(mCollectsPerHour));
 }
 
 QString Preferences::nodePort() const

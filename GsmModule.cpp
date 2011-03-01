@@ -6,7 +6,13 @@ GsmModule::GsmModule(QString path, QObject *parent) : AbstractSerialDevice(path,
 	initMembers();
 
 	if (initSerial() < 0)
+	{
 		emit occuredError(Serial_Open_Error);
+	}
+	else
+	{
+		valid = true;
+	}
 }
 
 void GsmModule::initMembers()
@@ -16,6 +22,9 @@ void GsmModule::initMembers()
 
 bool GsmModule::sendCommand(QString command)
 {
+	if (!valid)
+		return false;
+
 	int fd = notifier->socket();
 	for (int i = 0; i < command.length(); i++)
 	{

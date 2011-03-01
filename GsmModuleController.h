@@ -46,7 +46,6 @@ private:
 	QStringList queue;
 	QStringList bufferIn;
 	int busyTime;
-
 };
 
 #endif // GSMMODULECONTROLLER_H

@@ -236,7 +236,7 @@ void MainController::wsnFlowFired()
 		if (!rootNodeIdsToCollect.isEmpty())
 			step--;
 
-		wsnFlowTimer->start(5000);
+		wsnFlowTimer->start(10000);
 	}
 	else if (step == WsnSteps::Collect_Wait_To_Receive)
 	{
@@ -419,10 +419,12 @@ void MainController::addData(NodeData data, bool isSupplemental)
 uint16_t MainController::getTimeToSleep()
 {
 	QTime now = QTime::currentTime();
-	int elapsed = now.minute() % 30 * 60 + now.second();
+	int collectPeriod = 60 / preferences->collectsPerHour();
+	int elapsed = now.minute() % collectPeriod * 60 + now.second();
 
-	// Add one minute sleep time to prevent node clock drifting error
-	return (60 * 30 - elapsed + 60);
+	// Add 10% sleep time to prevent node clock drifting error
+	int timeToSleep = 60 * collectPeriod - elapsed;
+	return timeToSleep + timeToSleep / 10;
 }
 
 void MainController::wakeNetwork()

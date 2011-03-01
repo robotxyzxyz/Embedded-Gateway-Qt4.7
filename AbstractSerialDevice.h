@@ -31,6 +31,9 @@ protected:
 	QString serialPath;
 	QSocketNotifier *notifier;
 	speed_t baud;
+
+protected slots:
+	virtual void readData(int fd) = 0;
 };
 
 #endif // ABSTRACTSERIALDEVICE_H

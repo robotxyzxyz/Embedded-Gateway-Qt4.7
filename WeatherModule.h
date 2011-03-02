@@ -59,6 +59,22 @@ class WeatherModule : public AbstractSerialDevice
 
 public:
 	explicit WeatherModule(QString path, QObject *parent = 0);
+	enum CurrentType
+	{
+		None,
+		Indoor_Temperature,
+		Indoor_Humidity,
+		Outdoor_Temperature,
+		Outdoor_Humidity,
+		Dew_Point,
+		Wind_Chill,
+		Atomosphere_Pressure,
+		Wind_Speed,
+		Wind_Direction,
+		Rain_Fall,
+		Rain_Fall_Reset,
+		All_Done
+	};
 
 signals:
 	void receivedDatum(Weather::Datum datum);

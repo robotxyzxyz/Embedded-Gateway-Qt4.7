@@ -6,7 +6,7 @@ WeatherModule::WeatherModule(QString path, QObject *parent) : AbstractSerialDevi
 
 void WeatherModule::initMembers()
 {
-	currentType = Weather::Type::None;
+	currentType = None;
 }
 
 void WeatherModule::fetchAllData()

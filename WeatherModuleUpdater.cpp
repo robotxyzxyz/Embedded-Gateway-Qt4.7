@@ -26,7 +26,7 @@ void WeatherModuleUpdater::fetchNextDatum()
 	for (unsigned int i = 0; i < 3; i++)
 	{
 		msleep(100);
-		if (!module->sendCommand(type))
+		if (!module->sendCommand(currentType))
 			break;
 	}
 

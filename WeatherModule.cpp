@@ -24,7 +24,7 @@ int WeatherModule::initSerial()
 	ioctl(fd, TIOCMGET, &ios);
 	ios |= TIOCM_RTS;
 	ios &= ~TIOCM_DTR;
-	if (ioctl(fd, TIOCMSET, &ios) != 0);
+	if (ioctl(fd, TIOCMSET, &ios) != 0)
 		return -2;
 
 	return fd;

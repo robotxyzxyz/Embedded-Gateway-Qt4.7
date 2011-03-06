@@ -31,6 +31,7 @@ private slots:
 
 private:
 	void initMembers();
+	void initSerial();
 	int resetRainFall();
 	int sendByte(uint8_t byte);
 	int waitForAck(uint8_t *ack);

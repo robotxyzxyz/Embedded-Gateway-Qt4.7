@@ -1,11 +1,33 @@
 #include "WeatherModule.h"
 #include <QSocketNotifier>
 #include <QThread>
+#include <sys/ioctl.h>
 #include "SleepableThread.h"
 
 WeatherModule::WeatherModule(QString path, QObject *parent) : AbstractSerialDevice(path, parent)
 {
 	initMembers();
+
+	if (initSerial() < 0)
+		emit occuredError(Serial_Open_Error);
+}
+
+int WeatherModule::initSerial()
+{
+	int fd = this->AbstractSerialDevice::initSerial();
+
+	if (fd < 0)
+		return -1;
+
+	// Set RTS to high and DTR to low
+	int ios = 0;
+	ioctl(fd, TIOCMGET, &ios);
+	ios |= TIOCM_RTS;
+	ios &= ~TIOCM_DTR;
+	if (ioctl(fd, TIOCMSET, &ios) != 0);
+		return -2;
+
+	return fd;
 }
 
 void WeatherModule::initMembers()

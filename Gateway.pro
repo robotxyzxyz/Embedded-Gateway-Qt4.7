@@ -23,7 +23,8 @@ SOURCES += main.cpp\
     Preferences.cpp \
     AbstractSerialDevice.cpp \
     WeatherModule.cpp \
-    SleepableThread.cpp
+    SleepableThread.cpp \
+    WeatherModuleUpdater.cpp
 
 HEADERS  += Window.h \
     MainController.h \
@@ -41,6 +42,7 @@ HEADERS  += Window.h \
     AbstractSerialDevice.h \
     WeatherModule.h \
     Weather.h \
-    SleepableThread.h
+    SleepableThread.h \
+    WeatherModuleUpdater.h
 
 FORMS    +=

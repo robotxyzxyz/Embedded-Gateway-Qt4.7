@@ -4,9 +4,11 @@
 #include <QObject>
 #include <QHash>
 #include <QSet>
+#include <QVector>
 #include <stdint.h>
 #include "FMacPacketParser.h"
 #include "Preferences.h"
+#include "Weather.h"
 class QFile;
 class QSettings;
 class QStringList;
@@ -66,16 +68,19 @@ private slots:
 	void addData(NodeData data, bool isSupplemental);
 	void wakeNetwork();
 	void loadNetworkParams();
+	void onReceivedWeatherDatum(Weather::Datum datum);
 	void clearLog();
 
 private:
 	void initMembers();
 	void startGsmCsqUpdateDaemon();
+	void startWeatherModuleUpdateDeamon();
 	void sendPathSmss();
 	void sendDataSmss();
 	bool isNetworkCollectable();
 	uint16_t getTimeToSleep();
 	void log(QString text, bool inOwnLine = true);
+	QVector<int> currentWeatherData;
 
 	Window *window;
 	QFile *logFile;

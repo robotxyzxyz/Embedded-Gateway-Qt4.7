@@ -28,14 +28,28 @@ public:
 	// Setters
 	void setNodePort(QString p);
 	void setGsmPort(QString p);
+	void setWeatherPort(QString p);
 	void setServerPhone(QString p);
 	void setIsDeployed(bool d);
 	void setGatewayId(int id);
 
 	// Getters
-	QString nodePort() const;
-	QString gsmPort() const;
-	QString serverPhone() const;
+	inline QString nodePort() const
+	{
+		return mNodePort;
+	}
+	inline QString gsmPort() const
+	{
+		return mGsmPort;
+	}
+	inline QString weatherPort() const
+	{
+		return mWeatherPort;
+	}
+	inline QString serverPhone() const
+	{
+		return mServerPhone;
+	}
 	inline bool isDeployed() const
 	{
 		return mIsDeployed;
@@ -54,6 +68,7 @@ private:
 	QSettings *pref;
 	QString mNodePort;
 	QString mGsmPort;
+	QString mWeatherPort;
 	QString mServerPhone;
 	bool mIsDeployed;
 	int mGatewayId;

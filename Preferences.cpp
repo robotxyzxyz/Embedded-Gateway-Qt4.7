@@ -23,6 +23,11 @@ Preferences::Preferences()
 	if (mGsmPort == "")
 		setGsmPort(QString::fromAscii("/dev/ttyUSB1"));
 
+	// weatherPort
+	mWeatherPort = pref->value("serials/weatherPort").toString();
+	if (mWeatherPort == "")
+		setWeatherPort(QString::fromAscii("/dev/ttyUSB2"));
+
 	// Gateway ID
 	mGatewayId = pref->value("gateway/gatewayId").toInt();
 
@@ -53,6 +58,13 @@ void Preferences::setGsmPort(QString p)
 	mGsmPort = p;
 	pref->setValue("serials/gsmPort", QVariant(mGsmPort));
 }
+
+void Preferences::setWeatherPort(QString p)
+{
+	mWeatherPort = p;
+	pref->setValue("serials/weatherPort", QVariant(mWeatherPort));
+}
+
 void Preferences::setServerPhone(QString p)
 {
 	mServerPhone = p;
@@ -69,21 +81,6 @@ void Preferences::setGatewayId(int id)
 {
 	mGatewayId = id;
 	pref->setValue("gateway/gatewayId", QVariant(mGatewayId));
-}
-
-QString Preferences::nodePort() const
-{
-	return mNodePort;
-}
-
-QString Preferences::gsmPort() const
-{
-	return mGsmPort;
-}
-
-QString Preferences::serverPhone() const
-{
-	return mServerPhone;
 }
 
 void Preferences::saveDeployParams(WsnParams p)

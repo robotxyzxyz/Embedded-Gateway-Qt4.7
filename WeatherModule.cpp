@@ -196,7 +196,7 @@ void WeatherModule::processBufferData()
 	{
 		Weather::Datum datum;
 		datum.type = currentType;
-		datum.datum = value;
+		datum.value = value;
 		emit receivedDatum(datum);
 	}
 	bufferIn.clear();

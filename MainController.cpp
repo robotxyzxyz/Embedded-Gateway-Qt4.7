@@ -5,6 +5,7 @@
 #include <QTextStream>
 #include <QTimer>
 #include <QtAlgorithms>
+#include <climits>
 #include "BaseNode.h"
 #include "GlobalErrorCodes.h"
 #include "GsmModuleController.h"
@@ -12,6 +13,7 @@
 #include "Packets.h"
 #include "PacketSlots.h"
 #include "StatusView.h"
+#include "WeatherModuleUpdater.h""
 #include "Window.h"
 #include <QDebug>
 
@@ -20,6 +22,7 @@ MainController::MainController(QObject *parent) : QObject(parent)
 	preferences = new Preferences();
 	initMembers();
 	startGsmCsqUpdateDaemon();
+	startWeatherModuleUpdateDeamon();
 
 	// If the network is not deployed, do it now
 	// Otherwise load the deployment settings from file
@@ -32,6 +35,19 @@ MainController::MainController(QObject *parent) : QObject(parent)
 MainController::~MainController()
 {
 	delete preferences;
+}
+
+void MainController::startWeatherModuleUpdateDeamon()
+{
+	WeatherModuleUpdater *weatherUpdater = new WeatherModuleUpdater(preferences->weatherPort(),
+																	this);
+	connect(weatherUpdater, SIGNAL(receivedDatum(Weather::Datum)),
+			this, SLOT(onReceivedWeatherDatum(Weather::Datum)));
+}
+
+void MainController::onReceivedWeatherDatum(Weather::Datum datum)
+{
+	currentWeatherData[datum.type] = datum.value;
 }
 
 void MainController::startGsmCsqUpdateDaemon()
@@ -57,6 +73,10 @@ void MainController::initMembers()
 		= new GsmModuleController(preferences->gsmPort(),
 								  preferences->serverPhone(),
 								  this);
+
+	currentWeatherData.resize(Weather::Type::Not_Asking);
+	currentWeatherData.fill(INT_MAX);
+
 	wsnFlowTimer = new QTimer(this);
 	wsnFlowTimer->setSingleShot(true);
 	connect(wsnFlowTimer, SIGNAL(timeout()), this, SLOT(wsnFlowFired()));

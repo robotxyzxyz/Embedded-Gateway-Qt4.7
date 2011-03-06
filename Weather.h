@@ -5,6 +5,10 @@ namespace Weather
 {
 	namespace Type
 	{
+		// The Not_Asking value is always set to the last of the enum,
+		// thus promising this is the largest of all Types. This value
+		// is used as the limit of walk-throughs, and the needed size
+		// of weather data arrays
 		enum Type
 		{
 			Indoor_Temperature = 0,
@@ -25,7 +29,7 @@ namespace Weather
 	struct Datum
 	{
 		int type;
-		int datum;
+		int value;
 	};
 }
 

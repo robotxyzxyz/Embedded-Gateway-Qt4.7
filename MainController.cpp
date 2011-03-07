@@ -13,7 +13,7 @@
 #include "Packets.h"
 #include "PacketSlots.h"
 #include "StatusView.h"
-#include "WeatherModuleUpdater.h""
+#include "WeatherModuleUpdater.h"
 #include "Window.h"
 #include <QDebug>
 

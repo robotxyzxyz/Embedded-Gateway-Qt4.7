@@ -32,6 +32,7 @@ int WeatherModule::initSerial()
 
 void WeatherModule::initMembers()
 {
+	baud = B2400;
 	notifier->blockSignals(true);
 	currentType = Weather::Type::Not_Asking;
 	connect(this, SIGNAL(bufferFull()), this, SLOT(processBufferData()));

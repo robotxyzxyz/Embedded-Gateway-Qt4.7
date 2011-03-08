@@ -36,8 +36,8 @@ MainController::~MainController()
 
 void MainController::startGsmCsqUpdateDaemon()
 {
-	// Update GSM signal quality every 5 minutes
-	QObject::startTimer(5 * 60 * 1000);
+	// Update GSM signal quality every 10 minutes
+	QObject::startTimer(10 * 60 * 1000);
 	connect(gsmControl, SIGNAL(receivedCarrierSignalQuality(int)),
 			window->mainTab(), SLOT(setGsmSignalQuality(int)));
 }
@@ -438,7 +438,7 @@ void MainController::wakeNetwork()
 		log("Nodes are awake, checking network status...");
 		stepSatisfied = true;
 		step = WsnSteps::Not_Collected;
-		QTimer::singleShot(5000, this, SLOT(collectData()));
+		QTimer::singleShot(60 * 1000, this, SLOT(collectData()));
 	}
 }
 
@@ -506,7 +506,7 @@ void MainController::sendDataSmss()
 		sms.append(QString::number(preferences->gatewayId()) + ';');
 
 		// Construct node list
-		for (int i = 0; i < 10; i++)
+		for (int i = 0; i < 5; i++)
 		{
 			if (nodeCount == 0)
 				break;
@@ -536,7 +536,10 @@ void MainController::loadNetworkParams()
 	log("Detected existing configuration, will resume without deploying");
 	wsnParams = preferences->loadDeployParams();
 	if (!wsnParams.nodeAndParentIds.isEmpty())
+	{
 		window->mainTab()->setDeployedNodes(wsnParams.nodeAndParentIds.keys());
+		step = Collect_Finish;
+	}
 	else
 		QTimer::singleShot(1000, this, SLOT(deployNetwork()));
 }

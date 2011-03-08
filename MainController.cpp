@@ -538,7 +538,7 @@ void MainController::loadNetworkParams()
 	if (!wsnParams.nodeAndParentIds.isEmpty())
 	{
 		window->mainTab()->setDeployedNodes(wsnParams.nodeAndParentIds.keys());
-		step = Collect_Finish;
+		step = WsnSteps::Collect_Finish;
 	}
 	else
 		QTimer::singleShot(1000, this, SLOT(deployNetwork()));

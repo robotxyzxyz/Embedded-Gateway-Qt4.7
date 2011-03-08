@@ -7,11 +7,11 @@ GsmModuleController::GsmModuleController(QString devicePath,
 				   : QObject(parent)
 {
 	initMembers(&devicePath, &defaultTelNum);
-	QObject::startTimer(5000);
-	// The checking runs every 5 seconds, which is a bit long under normal
+	QObject::startTimer(10000);
+	// The checking runs every 10 seconds, which is a bit long under normal
 	//  circumstances...Maybe should use different delay time depending on
 	//  different commands (CSQ is very quick, CMGS header is fine, and CMGS
-	//  message sending part might even take loooooonger)
+	//  message sending part might even take longer)
 }
 
 void GsmModuleController::initMembers(QString *devicePath,

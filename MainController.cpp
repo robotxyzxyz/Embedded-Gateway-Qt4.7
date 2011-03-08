@@ -421,8 +421,7 @@ uint16_t MainController::getTimeToSleep()
 	QTime now = QTime::currentTime();
 	int elapsed = now.minute() % 30 * 60 + now.second();
 
-	// Add one minute sleep time to prevent node clock drifting error
-	return (60 * 30 - elapsed + 60);
+	return (60 * 30 - elapsed);
 }
 
 void MainController::wakeNetwork()

@@ -245,6 +245,13 @@ void MainController::wsnFlowFired()
 	}
 	else if (step == WsnSteps::Synchronize)
 	{
+		if (wsnParams.dataOfNodeIds.isEmpty())
+		{
+			wsnFlowTimer->stop();
+			log("No collectable nodes, will reroute in 3 seconds...");
+			QTimer::singleShot(3000, this, SLOT(deployNetwork()));
+			return;
+		}
 		log("Sending synchronization command");
 		baseNode->sendPacket(Packets::Synchronize);
 		wsnFlowTimer->start(5000);
@@ -264,12 +271,6 @@ void MainController::wsnFlowFired()
 	else if (step == WsnSteps::Collect_Finish)
 	{
 		wsnFlowTimer->stop();
-		if (wsnParams.dataOfNodeIds.isEmpty())
-		{
-			log("No collectable nodes, will reroute in 3 seconds...");
-			QTimer::singleShot(3000, this, SLOT(deployNetwork()));
-			return;
-		}
 		window->mainTab()->setCollectedNodes(wsnParams.dataOfNodeIds.keys());
 		log("Supplemental collection finished, nodes should be asleep now");
 		log("Data collected from " +

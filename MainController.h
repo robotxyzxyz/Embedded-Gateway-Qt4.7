@@ -25,7 +25,6 @@ namespace WsnSteps
 		Deploy_Request_Path				= 11,
 		Deploy_Distribute_Time_Slots		,
 		Deploy_Finish					,
-		Has_Deployed						,
 		Not_Collected					,
 		Collect_Start					,
 		Collect_Request					,
@@ -76,6 +75,16 @@ private:
 	bool isNetworkCollectable();
 	uint16_t getTimeToSleep();
 	void log(QString text, bool inOwnLine = true);
+
+	void stepDeploySendNextStartCommand();
+	void stepDeployRequestPath();
+	void stepDeployDitributeTimeSlots();
+	void stepDeployFinishing();
+	void stepDeployDone();
+	void stepCollectStart();
+	void stepCollectSendNextRequest();
+	void stepSupplementalCollectAndSleep();
+	void stepCollectFinish();
 
 	Window *window;
 	QFile *logFile;

@@ -83,6 +83,9 @@ void Preferences::setCollectsPerHour(int c)
 		return;
 	mCollectsPerHour = c;
 	pref->setValue("gateway/collectsPerHour", QVariant(mCollectsPerHour));
+
+	int collectInterval = (60 / mCollectsPerHour) * 60 * 1000;
+	mSleepCheckTimerIntervalMilliseconds = collectInterval + collectInterval / 10;
 }
 
 QString Preferences::nodePort() const

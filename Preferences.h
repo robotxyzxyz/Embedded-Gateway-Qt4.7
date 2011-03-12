@@ -57,11 +57,16 @@ public:
 	{
 		return mCollectsPerHour;
 	}
+	inline int sleepCheckTimerIntervalMilliseconds() const
+	{
+		return mSleepCheckTimerIntervalMilliseconds;
+	}
 
 private:
 	QString fileLoc;
 	QSettings *pref;
 	int mCollectsPerHour;
+	int mSleepCheckTimerIntervalMilliseconds;
 	QString mNodePort;
 	QString mGsmPort;
 	QString mServerPhone;

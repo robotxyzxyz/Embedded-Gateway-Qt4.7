@@ -61,14 +61,12 @@ void MainController::initMembers()
 	wsnFlowTimer->setSingleShot(true);
 	connect(wsnFlowTimer, SIGNAL(timeout()), this, SLOT(wsnFlowFired()));
 
-	// sleepCheckTimer is a 35-minute timer to check whether the network collects
-	//  data periodically
-	// If the network doesn't do anything for 45 minutes, something is wrong
+	// sleepCheckTimer checks whether the network collects data periodically
+	// If the network doesn't do anything for a period, something is wrong
 	// This timer is stopped when collectData() or deployNetwork() is called
 	sleepCheckTimer = new QTimer(this);
 	sleepCheckTimer->setSingleShot(true);
 	connect(sleepCheckTimer, SIGNAL(timeout()), this, SLOT(deployNetwork()));
-	sleepCheckTimer->start(Sleep_Check_Timer_Interval_Milliseconds);
 
 	timesDeployFailed = 0;
 
@@ -279,10 +277,10 @@ void MainController::wsnFlowFired()
 		sendDataSmss();
 		log("Data collection finished");
 
-		// Start a 35-minute timer to check if the network has collected data
+		// Start a timer to check if the network has collected data
 		// If the network doesn't do anything for 35 minutes, something is wrong
 		// This timer is stopped when collectData() or deployNetwork() is called
-		sleepCheckTimer->start(Sleep_Check_Timer_Interval_Milliseconds);
+		sleepCheckTimer->start(preferences->sleepCheckTimerIntervalMilliseconds());
 	}
 	else
 	{
@@ -537,10 +535,15 @@ void MainController::loadNetworkParams()
 {
 	log("Detected existing configuration, will resume without deploying");
 	wsnParams = preferences->loadDeployParams();
-	if (!wsnParams.nodeAndParentIds.isEmpty())
-		window->mainTab()->setDeployedNodes(wsnParams.nodeAndParentIds.keys());
-	else
+	if (wsnParams.nodeAndParentIds.isEmpty())
+	{
 		QTimer::singleShot(1000, this, SLOT(deployNetwork()));
+	}
+	else
+	{
+		window->mainTab()->setDeployedNodes(wsnParams.nodeAndParentIds.keys());
+		sleepCheckTimer->start(preferences->sleepCheckTimerIntervalMilliseconds());
+	}
 }
 
 void MainController::log(QString text, bool inOwnLine)

@@ -98,6 +98,7 @@ void MainController::initMembers()
 
 void MainController::deployNetwork()
 {
+	preferences->setIsDeployed(false);
 	sleepCheckTimer->stop();
 	wsnFlowTimer->stop();
 	clearLog();
@@ -115,7 +116,6 @@ void MainController::deployNetwork()
 
 	stepSatisfied = false;
 
-	preferences->setIsDeployed(false);
 	wsnParams.hasRootNodes = false;
 	wsnParams.maxTier = 0;
 	wsnParams.nodeAndParentIds.clear();

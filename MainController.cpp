@@ -39,8 +39,8 @@ MainController::~MainController()
 
 void MainController::startWeatherModuleUpdateDeamon()
 {
-	WeatherModuleUpdater *weatherUpdater =
-			new WeatherModuleUpdater(preferences->weatherPort(), this);
+	WeatherModuleUpdater *weatherUpdater = new WeatherModuleUpdater(preferences->weatherPort(),
+																	this);
 	connect(weatherUpdater, SIGNAL(receivedDatum(Weather::Datum)),
 			this, SLOT(onReceivedWeatherDatum(Weather::Datum)));
 }
@@ -144,115 +144,6 @@ void MainController::deployNetwork()
 	wsnFlowTimer->start(1);
 }
 
-void MainController::stepDeploySendNextStartCommand()
-{
-	// Print the one-time Phrase start
-	// Flag used here is reset in the next step (Deploy_Request_Path)
-	if (!stepSatisfied)
-	{
-		log("\nSending deploy command: ", false);
-		stepSatisfied = true;
-	}
-
-	// Print count of deploy command
-	log(QString::number(step - WsnSteps::Deploy_Reset) + " ", false);
-
-	// Send the command
-	baseNode->sendPacket(Packets::Start_Deploy);
-}
-
-void MainController::stepDeployRequestPath()
-{
-	// Reset flag used in previous step
-	stepSatisfied = false;
-
-	log("Requesting for path");
-	baseNode->sendPacket(Packets::Request_Path);
-}
-
-
-void MainController::stepDeployDitributeTimeSlots()
-{
-	// First check for the path result from the previous step
-	// Reroute in 3 seconds if the path and tier settings are not complete
-	if ((!wsnParams.hasRootNodes) ||
-		(wsnParams.nodeAndParentIds.size() == 0))
-	{
-		QTimer::singleShot(3000, this, SLOT(deployNetwork()));
-		log("Network deployment failed, will reroute in 3 seconds...");
-		return;
-	}
-
-	// Ask nodes to distribute time slots, thus finish deploying
-	baseNode->sendPacket(Packets::Distribute_Time_Slots);
-	QString s;
-	s.sprintf("Deployment finished for %d nodes",
-			  wsnParams.nodeAndParentIds.size());
-	log(s);
-}
-
-
-void MainController::stepDeployFinishing()
-{
-	// Return the deployment info via SMS
-	log("Returning path info...");
-	sendPathSmss();
-
-	// Save deploy params, then wait 10 seconds before collecting data
-	preferences->setIsDeployed(true);
-	preferences->saveDeployParams(wsnParams);
-	window->mainTab()->setDeployedNodes(wsnParams.nodeAndParentIds.keys());
-
-	timesDeployFailed = 0;
-}
-
-void MainController::stepCollectStart()
-{
-	log("Ordering first-tier nodes to collect data");
-	wsnParams.dataOfNodeIds.clear();
-	baseNode->sendPacket(Packets::Collect_Start);
-}
-
-void MainController::stepCollectSendNextRequest()
-{
-	int thisId = rootNodeIdsToCollect.takeFirst();
-	log("Sending request to node " + QString::number(thisId));
-	QList<uint8_t> req = Packets::Collect_Request;
-	req[GatewayPacket::Receiver] = (uint8_t)thisId;
-	baseNode->sendPacket(req);
-}
-
-void MainController::stepSupplementalCollectAndSleep()
-{
-	QList<uint8_t> slp = Packets::Sleep;
-	uint16_t timeToSleep = getTimeToSleep();
-	slp[GatewayPacket::Sleep_Time_Hi] = timeToSleep / 0x100;
-	slp[GatewayPacket::Sleep_Time_Lo] = timeToSleep % 0x100;
-	baseNode->sendPacket(slp);
-	log("Nodes will sleep for " +
-		QString::number(timeToSleep) +
-		" seconds after supplemental collection");
-}
-
-void MainController::stepCollectFinish()
-{
-	wsnFlowTimer->stop();
-	if (wsnParams.dataOfNodeIds.isEmpty())
-	{
-		log("No collectable nodes, will reroute in 3 seconds...");
-		QTimer::singleShot(3000, this, SLOT(deployNetwork()));
-		return;
-	}
-	window->mainTab()->setCollectedNodes(wsnParams.dataOfNodeIds.keys());
-	log("Supplemental collection finished, nodes should be asleep now");
-	log("Data collected from " +
-		QString::number(wsnParams.dataOfNodeIds.size()) +
-		" node(s)");
-	log("Will return data via GSM...");
-	sendDataSmss();
-	log("Data collection finished");
-}
-
 void MainController::wsnFlowFired()
 {
 	step++;
@@ -269,33 +160,83 @@ void MainController::wsnFlowFired()
 	}
 	else if (step < WsnSteps::Deploy_Request_Path)
 	{
-		stepDeploySendNextStartCommand();
+		// Print the one-time Phrase start
+		// Flag used here is reset in the next step (Deploy_Request_Path)
+		if (!stepSatisfied)
+		{
+			log("\nSending deploy command: ", false);
+			stepSatisfied = true;
+		}
+
+		// Print count of deploy command
+		log(QString::number(step - WsnSteps::Deploy_Reset) + " ", false);
+
+		// Send the command
+		baseNode->sendPacket(Packets::Start_Deploy);
+
+		// Run timer
 		wsnFlowTimer->start(1000);
 	}
 	else if (step == WsnSteps::Deploy_Request_Path)
 	{
-		stepDeployRequestPath();
+		// Reset flag used in previous step
+		stepSatisfied = false;
+
+		log("Requesting for path");
+		baseNode->sendPacket(Packets::Request_Path);
 		wsnFlowTimer->start(10000);
 		// Now wait for max tier packets and path return packets
 		// The minimum wait time is 10s, and if no-one returns this path
 		//  request, we re-deploy the network
+		// If there are packets received, waiting ends after no more packets
+		//  are received for more than 3 seconds
 		// See comments in setMaxTier() and addPath()
 	}
 	else if (step == WsnSteps::Deploy_Distribute_Time_Slots)
 	{
-		stepDeployDitributeTimeSlots();
+		// First check for the path result from the previous step
+		// Reroute in 3 seconds if the path and tier settings are not complete
+		if ((!wsnParams.hasRootNodes) ||
+			(wsnParams.nodeAndParentIds.size() == 0))
+		{
+			QTimer::singleShot(3000, this, SLOT(deployNetwork()));
+			log("Network deployment failed, will reroute in 3 seconds...");
+			return;
+		}
+
+		// Ask nodes to distribute time slots, thus finish deploying
+		baseNode->sendPacket(Packets::Distribute_Time_Slots);
+		QString s;
+		s.sprintf("Deployment finished for %d nodes",
+				  wsnParams.nodeAndParentIds.size());
+		log(s);
+
 		wsnFlowTimer->start(100);
 	}
 	else if (step == WsnSteps::Deploy_Finish)
 	{
-		stepDeployFinishing();
+		// Return the deployment info via SMS
+		log("Returning path info...");
+		sendPathSmss();
+		preferences->setIsDeployed(true);
+		wsnFlowTimer->start(1);
+	}
+	else if (step == WsnSteps::Has_Deployed)
+	{
+		// Save deploy params, then wait 10 seconds before collecting data
+		preferences->saveDeployParams(wsnParams);
+		window->mainTab()->setDeployedNodes(wsnParams.nodeAndParentIds.keys());
 
-		log("Will collect in 10 seconds...");
+		timesDeployFailed = 0;
 		QTimer::singleShot(10000, this, SLOT(collectData()));
+		log("Will collect in 10 seconds...");
 	}
 	else if (step == WsnSteps::Collect_Start)
 	{
-		stepCollectStart();
+		log("Ordering first-tier nodes to collect data");
+		wsnParams.dataOfNodeIds.clear();
+		baseNode->sendPacket(Packets::Collect_Start);
+
 		wsnFlowTimer->start(5000);
 	}
 	else if (step == WsnSteps::Collect_Request)
@@ -307,9 +248,14 @@ void MainController::wsnFlowFired()
 	}
 	else if (step == WsnSteps::Collect_Requesting)
 	{
-		stepCollectSendNextRequest();
+		int thisId = rootNodeIdsToCollect.takeFirst();
+		log("Sending request to node " + QString::number(thisId));
+		QList<uint8_t> req = Packets::Collect_Request;
+		req[GatewayPacket::Receiver] = (uint8_t)thisId;
+		baseNode->sendPacket(req);
 		if (!rootNodeIdsToCollect.isEmpty())
 			step--;
+
 		wsnFlowTimer->start(5000);
 	}
 	else if (step == WsnSteps::Collect_Wait_To_Receive)
@@ -325,12 +271,33 @@ void MainController::wsnFlowFired()
 	}
 	else if (step == WsnSteps::Supplemental_Collect_And_Sleep)
 	{
-		stepSupplementalCollectAndSleep();
+		QList<uint8_t> slp = Packets::Sleep;
+		uint16_t timeToSleep = getTimeToSleep();
+		slp[GatewayPacket::Sleep_Time_Hi] = timeToSleep / 0x100;
+		slp[GatewayPacket::Sleep_Time_Lo] = timeToSleep % 0x100;
+		baseNode->sendPacket(slp);
+		log("Nodes will sleep for " +
+			QString::number(timeToSleep) +
+			" seconds after supplemental collection");
 		wsnFlowTimer->start(5000);
 	}
 	else if (step == WsnSteps::Collect_Finish)
 	{
-		stepCollectFinish();
+		wsnFlowTimer->stop();
+		if (wsnParams.dataOfNodeIds.isEmpty())
+		{
+			log("No collectable nodes, will reroute in 3 seconds...");
+			QTimer::singleShot(3000, this, SLOT(deployNetwork()));
+			return;
+		}
+		window->mainTab()->setCollectedNodes(wsnParams.dataOfNodeIds.keys());
+		log("Supplemental collection finished, nodes should be asleep now");
+		log("Data collected from " +
+			QString::number(wsnParams.dataOfNodeIds.size()) +
+			" node(s)");
+		log("Will return data via GSM...");
+		sendDataSmss();
+		log("Data collection finished");
 
 		// Start a 35-minute timer to check if the network has collected data
 		// If the network doesn't do anything for 35 minutes, something is wrong

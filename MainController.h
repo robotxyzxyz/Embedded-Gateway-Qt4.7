@@ -27,6 +27,7 @@ namespace WsnSteps
 		Deploy_Request_Path				= 11,
 		Deploy_Distribute_Time_Slots		,
 		Deploy_Finish					,
+		Has_Deployed						,
 		Not_Collected					,
 		Collect_Start					,
 		Collect_Request					,
@@ -74,17 +75,6 @@ private:
 	void initMembers();
 	void startGsmCsqUpdateDaemon();
 	void startWeatherModuleUpdateDeamon();
-
-	void stepDeploySendNextStartCommand();
-	void stepDeployRequestPath();
-	void stepDeployDitributeTimeSlots();
-	void stepDeployFinishing();
-	void stepDeployDone();
-	void stepCollectStart();
-	void stepCollectSendNextRequest();
-	void stepSupplementalCollectAndSleep();
-	void stepCollectFinish();
-
 	void sendPathSmss();
 	void sendDataSmss();
 	bool isNetworkCollectable();

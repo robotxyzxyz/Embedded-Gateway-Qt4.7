@@ -60,7 +60,6 @@ private slots:
 	void collectData();
 	void wsnFlowFired();
 	void setMaxTier(int tier);
-	void addFirstTierNode();
 	void addPath(int nodeId, int parentId, bool isRelayed);
 	void addData(NodeData data, bool isSupplemental);
 	void wakeNetwork();

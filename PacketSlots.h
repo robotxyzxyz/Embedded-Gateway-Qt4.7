@@ -18,7 +18,7 @@ namespace NodePacket
 {
 	enum NodePacket
 	{
-		Droup_Id                  = 10,
+		Group_Id                  = 10,
 		Cmdform                   ,
 		Data_Sender_Id            ,
 		Data_Source_Id            ,
@@ -51,7 +51,7 @@ namespace Cmdform
 		Return_Max_Tier		= 0x01,
 		Return_Path			= 0x03,
 		Return_Data			= 0x21,
-		Supp_Return_Data	= 0x49,
+		Supp_Return_Data		= 0x49,
 		Awake				= 0x90,
 		Request_Reroute		= 0x91,
 	};

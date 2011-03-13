@@ -25,7 +25,6 @@ public:
 
 signals:
 	void gotMaxTier(int tier);
-	void gotFirstTierNode();
 	void gotNodePath(int nodeId, int parentId, bool relayed = false);
 	void gotData(NodeData data, bool isSupplemental = false);
 	void hadAwakeNode();

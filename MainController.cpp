@@ -78,8 +78,6 @@ void MainController::initMembers()
 
 	// Connect packet parser events
 	connect(&packParser, SIGNAL(gotMaxTier(int)), this, SLOT(setMaxTier(int)));
-	connect(&packParser, SIGNAL(gotFirstTierNode()),
-			this, SLOT(addFirstTierNode()));
 	connect(&packParser, SIGNAL(gotNodePath(int, int, bool)),
 			this, SLOT(addPath(int, int, bool)));
 	connect(&packParser, SIGNAL(gotData(NodeData, bool)),
@@ -357,17 +355,15 @@ void MainController::setMaxTier(int tier)
 		wsnFlowTimer->setInterval(3000);
 }
 
-void MainController::addFirstTierNode()
+void MainController::addPath(int nodeId, int parentId, bool isRelayed)
 {
+	// Check that there are first tier nodes
 	if (!wsnParams.hasRootNodes)
 	{
 		wsnParams.hasRootNodes = true;
 		log("Root node discovered");
 	}
-}
 
-void MainController::addPath(int nodeId, int parentId, bool isRelayed)
-{
 	// Add the node/parent combination into table if not existed
 	if (!wsnParams.nodeAndParentIds.contains(nodeId))
 	{

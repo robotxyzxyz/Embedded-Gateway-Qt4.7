@@ -15,15 +15,15 @@ void FMacPacketParser::processPacket(QList<uint8_t> packet)
 
 	case Cmdform::Return_Path:
 		if (packet[NodePacket::Path_Sender_Tier] == 1)
-			emit gotFirstTierNode();
+		{
+			emit gotNodePath(packet[NodePacket::Path_Sender_Id],
+							 packet[NodePacket::Path_Sender_Parent_Id]);
 
-		emit gotNodePath(packet[NodePacket::Path_Sender_Id],
-						 packet[NodePacket::Path_Sender_Parent_Id]);
-
-		if (packet[NodePacket::Path_Source_Id])
-			emit gotNodePath(packet[NodePacket::Path_Source_Id],
-							 packet[NodePacket::Path_Source_Parent_Id],
-							 true);
+			if (packet[NodePacket::Path_Source_Id])
+				emit gotNodePath(packet[NodePacket::Path_Source_Id],
+								 packet[NodePacket::Path_Source_Parent_Id],
+								 true);
+		}
 		break;
 
 	case Cmdform::Return_Data:

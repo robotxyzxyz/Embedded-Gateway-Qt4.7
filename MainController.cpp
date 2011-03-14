@@ -149,26 +149,14 @@ void MainController::stepDeployRequestPath()
 }
 
 
-bool MainController::stepDeployDitributeTimeSlots()
+void MainController::stepDeployDitributeTimeSlots()
 {
-	// First check for the path result from the previous step
-	// Reroute in 3 seconds if the path and tier settings are not complete
-	if ((!wsnParams.hasRootNodes) ||
-		(wsnParams.nodeAndParentIds.size() == 0))
-	{
-		QTimer::singleShot(3000, this, SLOT(deployNetwork()));
-		log("Network deployment failed, will reroute in 3 seconds...");
-		return false;
-	}
-
 	// Ask nodes to distribute time slots, thus finish deploying
 	baseNode->sendPacket(Packets::Distribute_Time_Slots);
 	QString s;
 	s.sprintf("Deployment finished for %d nodes",
 			  wsnParams.nodeAndParentIds.size());
 	log(s);
-
-	return true;
 }
 
 
@@ -263,8 +251,18 @@ void MainController::wsnFlowFired()
 	}
 	else if (step == WsnSteps::Deploy_Distribute_Time_Slots)
 	{
-		if (stepDeployDitributeTimeSlots())
+		// First check for the path result
+		// Reroute in 3 seconds if the path and tier settings are not complete
+		if (!isNetworkCollectable())
+		{
+			QTimer::singleShot(3000, this, SLOT(deployNetwork()));
+			log("Network deployment failed, will reroute in 3 seconds...");
+		}
+		else
+		{
+			stepDeployDitributeTimeSlots();
 			wsnFlowTimer->start(100);
+		}
 	}
 	else if (step == WsnSteps::Deploy_Finish)
 	{

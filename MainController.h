@@ -77,7 +77,7 @@ private:
 
 	void stepDeploySendNextStartCommand();
 	void stepDeployRequestPath();
-	bool stepDeployDitributeTimeSlots();
+	void stepDeployDitributeTimeSlots();
 	void stepDeployFinishing();
 	void stepDeployDone();
 	void stepCollectStart();

@@ -149,7 +149,7 @@ void MainController::stepDeployRequestPath()
 }
 
 
-void MainController::stepDeployDitributeTimeSlots()
+bool MainController::stepDeployDitributeTimeSlots()
 {
 	// First check for the path result from the previous step
 	// Reroute in 3 seconds if the path and tier settings are not complete
@@ -158,7 +158,7 @@ void MainController::stepDeployDitributeTimeSlots()
 	{
 		QTimer::singleShot(3000, this, SLOT(deployNetwork()));
 		log("Network deployment failed, will reroute in 3 seconds...");
-		return;
+		return false;
 	}
 
 	// Ask nodes to distribute time slots, thus finish deploying
@@ -167,6 +167,8 @@ void MainController::stepDeployDitributeTimeSlots()
 	s.sprintf("Deployment finished for %d nodes",
 			  wsnParams.nodeAndParentIds.size());
 	log(s);
+
+	return true;
 }
 
 
@@ -261,13 +263,12 @@ void MainController::wsnFlowFired()
 	}
 	else if (step == WsnSteps::Deploy_Distribute_Time_Slots)
 	{
-		stepDeployDitributeTimeSlots();
-		wsnFlowTimer->start(100);
+		if (stepDeployDitributeTimeSlots())
+			wsnFlowTimer->start(100);
 	}
 	else if (step == WsnSteps::Deploy_Finish)
 	{
 		stepDeployFinishing();
-
 		log("Will collect in 10 seconds...");
 		QTimer::singleShot(10000, this, SLOT(collectData()));
 	}
@@ -280,7 +281,6 @@ void MainController::wsnFlowFired()
 	{
 		log("Requesting data from first-tier nodes");
 		rootNodeIdsToCollect = wsnParams.rootNodeIds.toList();
-
 		wsnFlowTimer->start(1);
 	}
 	else if (step == WsnSteps::Collect_Requesting)

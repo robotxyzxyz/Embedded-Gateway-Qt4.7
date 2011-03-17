@@ -68,7 +68,7 @@ void MainController::initMembers()
 	sleepCheckTimer = new QTimer(this);
 	sleepCheckTimer->setSingleShot(true);
 	connect(sleepCheckTimer, SIGNAL(timeout()), this, SLOT(deployNetwork()));
-	sleepCheckTimer->start(Sleep_Check_Timer_Interval_Milliseconds);
+	sleepCheckTimer->start(30 * 60 * 1000 / 10 + 30 * 60 * 1000);
 
 	timesDeployFailed = 0;
 
@@ -200,6 +200,12 @@ void MainController::stepSupplementalCollectAndSleep()
 	log("Nodes will sleep for " +
 		QString::number(timeToSleep) +
 		" seconds after supplemental collection");
+
+	// Start a timer to check if the network has collected data
+	// If the network doesn't collect for this time interval, something's wrong
+	// The time is calculated as (collect interval) * 0.1 + (sleep time)
+	// This timer is stopped when collectData() or deployNetwork() is called
+	sleepCheckTimer->start((int)timeToSleep * 1000 + 30 * 60 * 1000 / 10);
 }
 
 void MainController::stepCollectFinish()
@@ -307,11 +313,6 @@ void MainController::wsnFlowFired()
 	else if (step == WsnSteps::Collect_Finish)
 	{
 		stepCollectFinish();
-
-		// Start a 35-minute timer to check if the network has collected data
-		// If the network doesn't do anything for 35 minutes, something is wrong
-		// This timer is stopped when collectData() or deployNetwork() is called
-		sleepCheckTimer->start(Sleep_Check_Timer_Interval_Milliseconds);
 	}
 	else
 	{

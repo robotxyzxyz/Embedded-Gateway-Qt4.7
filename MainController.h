@@ -45,7 +45,6 @@ public:
 	virtual ~MainController();
 
 	static const int Deploy_Failure_Reboot_Threshold = 3;
-	static const int Sleep_Check_Timer_Interval_Milliseconds = 35 * 60 * 1000;
 
 public slots:
 

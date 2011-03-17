@@ -72,6 +72,7 @@ private:
 	void sendDataSmss();
 	bool isNetworkCollectable();
 	uint16_t getTimeToSleep();
+	bool isCollectSuccessful();
 	void log(QString text, bool inOwnLine = true);
 
 	void stepDeploySendNextStartCommand();
@@ -81,6 +82,7 @@ private:
 	void stepDeployDone();
 	void stepCollectStart();
 	void stepCollectSendNextRequest();
+	void stepCollectSynchronize();
 	void stepSupplementalCollectAndSleep();
 	void stepCollectFinish();
 

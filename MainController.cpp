@@ -453,6 +453,9 @@ uint16_t MainController::getTimeToSleep()
 
 void MainController::wakeNetwork()
 {
+	if (step < WsnSteps::Deploy_Finish)
+		return;
+
 	// Tell the nodes the gateway is awake
 	baseNode->sendPacket(Packets::Awake);
 

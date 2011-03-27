@@ -24,17 +24,21 @@ Preferences::Preferences()
 		setGsmPort(QString::fromAscii("/dev/ttyUSB1"));
 
 	// Gateway ID
+	// If the setting is not set, the value would be 0
+	// We check to generate it
 	mGatewayId = pref->value("gateway/gatewayId").toInt();
+	if (mGatewayId == 0)
+		setGatewayId(0);
 
 	// Server Phone
 	mServerPhone = pref->value("gateway/serverPhone").toString();
 	if (mServerPhone == "")
 		setServerPhone(QString::fromAscii("0952650121"));
 
-	// Finally, check if the network has already been deployed
-	// If the setting is not set, the value would be false, so we don't need
-	//  to check to generate it
-	mIsDeployed = pref->value("wsn/isDeployed").toBool();
+	// Pending Task
+	mPendingTask = pref->value("wsn/pendingTask").toInt();
+	if (mPendingTask == 0)
+		setPendingTask(PendingTask::Idle);
 }
 
 Preferences::~Preferences()
@@ -59,10 +63,10 @@ void Preferences::setServerPhone(QString p)
 	pref->setValue("gateway/serverPhone", QVariant(mServerPhone));
 }
 
-void Preferences::setIsDeployed(bool d)
+void Preferences::setPendingTask(int p)
 {
-	mIsDeployed = d;
-	pref->setValue("wsn/isDeployed", QVariant(mIsDeployed));
+	mPendingTask = p;
+	pref->setValue("wsn/pendingTask", QVariant(mPendingTask));
 }
 
 void Preferences::setGatewayId(int id)

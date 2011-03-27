@@ -62,12 +62,13 @@ private slots:
 	void addPath(int nodeId, int parentId, bool isRelayed);
 	void addData(NodeData data, bool isSupplemental);
 	void wakeNetwork();
-	void loadNetworkParams();
 	void clearLog();
+	void reboot();
 
 private:
 	void initMembers();
 	void initializeBaseNodeAndGsmModule();
+	bool loadNetworkParams();
 	void startGsmCsqUpdateDaemon();
 	void sendPathSmss();
 	void sendDataSmss();

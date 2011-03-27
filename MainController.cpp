@@ -21,12 +21,27 @@ MainController::MainController(QObject *parent) : QObject(parent)
 	initMembers();
 	startGsmCsqUpdateDaemon();
 
-	// If the network is not deployed, do it now
-	// Otherwise load the deployment settings from file
-	if (!preferences->isDeployed())
+	switch (preferences->pendingTask())
+	{
+	case PendingTask::Idle:
+		if (!loadNetworkParams())
+			QTimer::singleShot(1000, this, SLOT(deployNetwork()));
+		break;
+
+	case PendingTask::Should_Deploy:
 		QTimer::singleShot(1000, this, SLOT(deployNetwork()));
-	else
-		QTimer::singleShot(1000, this, SLOT(loadNetworkParams()));
+		break;
+
+	case PendingTask::Should_Collect:
+		if (loadNetworkParams())
+			QTimer::singleShot(1000, this, SLOT(collectData()));
+		else
+			QTimer::singleShot(1000, this, SLOT(deployNetwork()));
+		break;
+
+	default:
+		break;
+	}
 }
 
 MainController::~MainController()
@@ -34,10 +49,12 @@ MainController::~MainController()
 	delete preferences;
 }
 
-void MainController::startGsmCsqUpdateDaemon()
+void MainController::reboot()
 {
-	// Update GSM signal quality every 10 minutes
-	QObject::startTimer(10 * 60 * 1000);
+	delete preferences;
+	log("Will try to reboot...");
+	if (system("reboot") != 0)
+		emit occuredError(GlobalErrors::Reboot_Error);
 }
 
 void MainController::timerEvent(QTimerEvent *)
@@ -102,24 +119,31 @@ void MainController::initMembers()
 			this, SLOT(collectData()));
 }
 
+void MainController::startGsmCsqUpdateDaemon()
+{
+	// Update GSM signal quality every 10 minutes
+	QObject::startTimer(10 * 60 * 1000);
+}
+
 void MainController::deployNetwork()
 {
-	preferences->setIsDeployed(false);
+	if (preferences->pendingTask() == PendingTask::Should_Reboot)
+	{
+		preferences->setPendingTask(PendingTask::Should_Deploy);
+		QTimer::singleShot(3 * 1000, this, SLOT(reboot()));
+		return;
+	}
+
+	preferences->setPendingTask(PendingTask::Should_Deploy);
 	sleepCheckTimer->stop();
 	wsnFlowTimer->stop();
 	clearLog();
 	step = WsnSteps::Not_Deployed;
 
 	if (timesDeployFailed >= Deploy_Failure_Reboot_Threshold)
-	{
-		log("Will try to reboot...");
-		if (system("reboot") != 0)
-			emit occuredError(GlobalErrors::Reboot_Error);
-	}
+		reboot();
 	else
-	{
 		timesDeployFailed++;
-	}
 
 	stepSatisfied = false;
 
@@ -176,7 +200,7 @@ void MainController::stepDeployFinishing()
 	sendPathSmss();
 
 	// Save deploy params, then wait 10 seconds before collecting data
-	preferences->setIsDeployed(true);
+	preferences->setPendingTask(PendingTask::Should_Collect);
 	preferences->saveDeployParams(wsnParams);
 	window->mainTab()->setDeployedNodes(wsnParams.nodeAndParentIds.keys());
 
@@ -247,6 +271,7 @@ void MainController::stepCollectFinish()
 	log("Will return data via GSM...");
 	sendDataSmss();
 	log("Data collection finished");
+	preferences->setPendingTask(PendingTask::Idle);
 }
 
 void MainController::wsnFlowFired()
@@ -342,20 +367,30 @@ void MainController::wsnFlowFired()
 }
 void MainController::collectData()
 {
-	if (!preferences->isDeployed())
+	if (preferences->pendingTask() == PendingTask::Should_Reboot)
+	{
+		preferences->setPendingTask(PendingTask::Should_Collect);
+		QTimer::singleShot(3 * 1000, this, SLOT(reboot()));
 		return;
+	}
+
+	preferences->setPendingTask(PendingTask::Should_Collect);
 
 	sleepCheckTimer->stop();
 	wsnFlowTimer->stop();
 	stepSatisfied = false;
 	clearLog();
 
-	if (isNetworkCollectable())
-		step = WsnSteps::Not_Collected;
+	if (!isNetworkCollectable())
+	{
+		preferences->setPendingTask(PendingTask::Should_Reboot);
+		QTimer::singleShot(1, this, SLOT(deployNetwork()));
+	}
 	else
-		step = WsnSteps::Not_Deployed;
-
-	wsnFlowTimer->start(1);
+	{
+		step = WsnSteps::Not_Collected;
+		wsnFlowTimer->start(1);
+	}
 }
 
 void MainController::setMaxTier(int tier)
@@ -488,7 +523,8 @@ void MainController::wakeNetwork()
 		log("Nodes are awake, checking network status...");
 		stepSatisfied = true;
 		step = WsnSteps::Not_Collected;
-		QTimer::singleShot(60 * 1000, this, SLOT(collectData()));
+		preferences->setPendingTask(PendingTask::Should_Reboot);
+		QTimer::singleShot(30 * 1000, this, SLOT(collectData()));
 	}
 }
 
@@ -581,7 +617,7 @@ void MainController::sendDataSmss()
 	}
 }
 
-void MainController::loadNetworkParams()
+bool MainController::loadNetworkParams()
 {
 	log("Detected existing configuration, will resume without deploying");
 	wsnParams = preferences->loadDeployParams();
@@ -589,9 +625,12 @@ void MainController::loadNetworkParams()
 	{
 		window->mainTab()->setDeployedNodes(wsnParams.nodeAndParentIds.keys());
 		step = WsnSteps::Collect_Finish;
+		return true;
 	}
 	else
-		QTimer::singleShot(1000, this, SLOT(deployNetwork()));
+	{
+		return false;
+	}
 }
 
 void MainController::log(QString text, bool inOwnLine)

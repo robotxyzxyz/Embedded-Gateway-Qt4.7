@@ -16,6 +16,17 @@ struct WsnParams
 	QHash<int, NodeData> dataOfNodeIds;
 };
 
+namespace PendingTask
+{
+	enum PendingTask
+	{
+		Idle,
+		Should_Collect,
+		Should_Deploy,
+		Should_Reboot
+	};
+}
+
 class Preferences
 {
 public:
@@ -29,16 +40,16 @@ public:
 	void setNodePort(QString p);
 	void setGsmPort(QString p);
 	void setServerPhone(QString p);
-	void setIsDeployed(bool d);
+	void setPendingTask(int p);
 	void setGatewayId(int id);
 
 	// Getters
 	QString nodePort() const;
 	QString gsmPort() const;
 	QString serverPhone() const;
-	inline bool isDeployed() const
+	inline int pendingTask() const
 	{
-		return mIsDeployed;
+		return mPendingTask;
 	}
 	inline int gatewayId() const
 	{
@@ -55,7 +66,7 @@ private:
 	QString mNodePort;
 	QString mGsmPort;
 	QString mServerPhone;
-	bool mIsDeployed;
+	int mPendingTask;
 	int mGatewayId;
 	int mMaxTier;
 	QSet<int> mRootNodeIds;

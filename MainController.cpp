@@ -39,6 +39,11 @@ MainController::MainController(QObject *parent) : QObject(parent)
 			QTimer::singleShot(1000, this, SLOT(deployNetwork()));
 		break;
 
+	case PendingTask::Should_Reboot:
+		preferences->setPendingTask(PendingTask::Idle);
+		reboot();
+		break;
+
 	default:
 		break;
 	}

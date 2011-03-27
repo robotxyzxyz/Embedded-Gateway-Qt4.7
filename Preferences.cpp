@@ -29,7 +29,7 @@ Preferences::Preferences()
 	// Server Phone
 	mServerPhone = pref->value("gateway/serverPhone").toString();
 	if (mServerPhone == "")
-		setServerPhone(QString::fromAscii("0952650121"));
+		setServerPhone(QString::fromAscii("0922915996"));
 
 	// Finally, check if the network has already been deployed
 	// If the setting is not set, the value would be false, so we don't need

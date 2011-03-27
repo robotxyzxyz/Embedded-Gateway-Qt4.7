@@ -41,11 +41,11 @@ void StatusView::layoutElements()
 	setLayout(whole);
 }
 
-void StatusView::log(QString text, bool inOwnLine)
+void StatusView::log(QString text, QString tag, bool inOwnLine)
 {
 	// Append log
 	if (inOwnLine)
-		logView->append(text);
+		logView->append(tag + " " + text);
 	else
 		logView->insertPlainText(text);
 

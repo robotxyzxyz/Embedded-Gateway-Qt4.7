@@ -13,7 +13,7 @@ public:
     explicit StatusView(QWidget *parent = 0);
 
 public slots:
-	void log(QString text, bool inOwnLine = true);
+	void log(QString text, QString tag, bool inOwnLine = true);
 	void clearLog();
 
 signals:

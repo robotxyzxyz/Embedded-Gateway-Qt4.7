@@ -44,7 +44,7 @@ public:
     explicit MainController(QObject *parent = 0);
 	virtual ~MainController();
 
-	static const int Deploy_Failure_Reboot_Threshold = 3;
+	static const int Deploy_Failure_Reboot_Threshold = 1;
 
 public slots:
 
@@ -67,6 +67,7 @@ private slots:
 
 private:
 	void initMembers();
+	void initializeBaseNodeAndGsmModule();
 	void startGsmCsqUpdateDaemon();
 	void sendPathSmss();
 	void sendDataSmss();

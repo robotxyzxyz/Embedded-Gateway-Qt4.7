@@ -38,8 +38,6 @@ void MainController::startGsmCsqUpdateDaemon()
 {
 	// Update GSM signal quality every 10 minutes
 	QObject::startTimer(10 * 60 * 1000);
-	connect(gsmControl, SIGNAL(receivedCarrierSignalQuality(int)),
-			window->mainTab(), SLOT(setGsmSignalQuality(int)));
 }
 
 void MainController::timerEvent(QTimerEvent *)
@@ -47,16 +45,30 @@ void MainController::timerEvent(QTimerEvent *)
 	gsmControl->sendCarrierSignalQualityCommand();
 }
 
-void MainController::initMembers()
+void MainController::initializeBaseNodeAndGsmModule()
 {
-	window = new Window(preferences);
-	logFile = NULL;
-
 	baseNode = new BaseNode(preferences->nodePort(), this);
 	gsmControl
 		= new GsmModuleController(preferences->gsmPort(),
 								  preferences->serverPhone(),
 								  this);
+
+	// Connect packet receiving to parsing
+	connect(baseNode, SIGNAL(receivedPacket(QList<uint8_t>)),
+			&packParser, SLOT(processPacket(QList<uint8_t>)));
+
+	// Connect GSM signal strength receiving
+	connect(gsmControl, SIGNAL(receivedCarrierSignalQuality(int)),
+			window->mainTab(), SLOT(setGsmSignalQuality(int)));
+}
+
+void MainController::initMembers()
+{
+	window = new Window(preferences);
+	logFile = NULL;
+
+	initializeBaseNodeAndGsmModule();
+
 	wsnFlowTimer = new QTimer(this);
 	wsnFlowTimer->setSingleShot(true);
 	connect(wsnFlowTimer, SIGNAL(timeout()), this, SLOT(wsnFlowFired()));
@@ -71,10 +83,6 @@ void MainController::initMembers()
 	sleepCheckTimer->start(30 * 60 * 1000 / 10 + 30 * 60 * 1000);
 
 	timesDeployFailed = 0;
-
-	// Connect packet receiving to parsing
-	connect(baseNode, SIGNAL(receivedPacket(QList<uint8_t>)),
-			&packParser, SLOT(processPacket(QList<uint8_t>)));
 
 	// Connect packet parser events
 	connect(&packParser, SIGNAL(gotMaxTier(int)), this, SLOT(setMaxTier(int)));
@@ -104,6 +112,7 @@ void MainController::deployNetwork()
 
 	if (timesDeployFailed >= Deploy_Failure_Reboot_Threshold)
 	{
+		log("Will try to reboot...");
 		if (system("reboot") != 0)
 			emit occuredError(GlobalErrors::Reboot_Error);
 	}
@@ -587,7 +596,8 @@ void MainController::loadNetworkParams()
 
 void MainController::log(QString text, bool inOwnLine)
 {
-	window->statusTab()->log(text, inOwnLine);
+	QString tag = QTime::currentTime().toString("[hh:mm:ss]");
+	window->statusTab()->log(text, tag, inOwnLine);
 
 	// Write to log file
 	QString name = QDir::homePath() +
@@ -603,9 +613,8 @@ void MainController::log(QString text, bool inOwnLine)
 	}
 
 	QTextStream logger(logFile);
-	QString tag = QTime::currentTime().toString("[hh:mm:ss] ");
 	if (inOwnLine)
-		logger << '\n' << tag;
+		logger << '\n' << tag << ' ';
 	logger << text;
 }
 

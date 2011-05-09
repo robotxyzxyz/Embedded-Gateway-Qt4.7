@@ -33,7 +33,7 @@ Preferences::Preferences()
 	// Server Phone
 	mServerPhone = pref->value("gateway/serverPhone").toString();
 	if (mServerPhone == "")
-		setServerPhone(QString::fromAscii("0952650121"));
+		setServerPhone(QString::fromAscii("0922915996"));
 
 	// Pending Task
 	mPendingTask = pref->value("wsn/pendingTask").toInt();

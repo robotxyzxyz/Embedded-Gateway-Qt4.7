@@ -12,6 +12,7 @@
 #include "Packets.h"
 #include "PacketSlots.h"
 #include "StatusView.h"
+#include "WeatherFetchThread.h"
 #include "Window.h"
 #include <QDebug>
 
@@ -275,6 +276,16 @@ void MainController::stepCollectFinish()
 		" node(s)");
 	log("Will return data via GSM...");
 	sendDataSmss();
+}
+
+void MainController::stepReadWeather()
+{
+	QString timeTag = QDateTime::currentDateTime().toString("yyyy-M-d-h:m;");
+	t = new WeatherFetchThread(QDir::homePath() + ".",
+							   QDir::homePath() + "/wsn/weather/" + timeTag + ".xml",
+							   QDir::homePath() + "/wsn/weather/open2300.conf");
+	connect(t, SIGNAL(finished()), this, SLOT(sendWeatherSms()));
+	t->start();
 	log("Data collection finished");
 	preferences->setPendingTask(PendingTask::Idle);
 }
@@ -364,6 +375,11 @@ void MainController::wsnFlowFired()
 	else if (step == WsnSteps::Collect_Finish)
 	{
 		stepCollectFinish();
+		wsnFlowTimer->start(5000);
+	}
+	else if (step == WsnSteps::Read_Weather)
+	{
+		stepReadWeather();
 	}
 	else
 	{
@@ -620,6 +636,32 @@ void MainController::sendDataSmss()
 		// Send the constructed SMS
 		gsmControl->sendSmsCommand(sms);
 	}
+}
+
+void MainController::sendWeatherSms()
+{
+	// Construct header
+	QString sms("s51;");
+	QDateTime now = QDateTime::currentDateTime();
+	QString timeString = now.toString("yyyy,M,d,h,m,s;");
+	sms.append(timeString);
+	sms.append(QString::number(preferences->gatewayId()) + ';' +
+			   's' + QString::number(preferences->gatewayId()) + ',');
+
+	// Append data
+	QString msg = t->datum()->temperature + ',' +
+				  t->datum()->humidity    + ',' +
+				  t->datum()->windSpeed   + ',' +
+				  t->datum()->windDirStr  + ',' +
+				  t->datum()->rain        + ',' +
+				  t->datum()->pressure    + ',' +
+				  t->datum()->windChill   + ',' +
+				  t->datum()->dewPoint    ;
+	delete t;
+	sms.append(msg + ';');
+
+	// Send the constructed SMS
+	gsmControl->sendSmsCommand(sms);
 }
 
 bool MainController::loadNetworkParams()

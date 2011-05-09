@@ -13,6 +13,7 @@ class QStringList;
 class QTimer;
 class BaseNode;
 class GsmModuleController;
+class WeatherFetchThread;
 class Window;
 
 namespace WsnSteps
@@ -33,6 +34,7 @@ namespace WsnSteps
 		Synchronize						,
 		Supplemental_Collect_And_Sleep	,
 		Collect_Finish					,
+		Read_Weather					,
 	};
 }
 
@@ -61,6 +63,9 @@ private slots:
 	void setMaxTier(int tier);
 	void addPath(int nodeId, int parentId, bool isRelayed);
 	void addData(NodeData data, bool isSupplemental);
+	void sendPathSmss();
+	void sendDataSmss();
+	void sendWeatherSms();
 	void wakeNetwork();
 	void clearLog();
 	void reboot();
@@ -70,8 +75,6 @@ private:
 	void initializeBaseNodeAndGsmModule();
 	bool loadNetworkParams();
 	void startGsmCsqUpdateDaemon();
-	void sendPathSmss();
-	void sendDataSmss();
 	bool isNetworkCollectable();
 	uint16_t getTimeToSleep();
 	bool isCollectSuccessful();
@@ -87,10 +90,12 @@ private:
 	void stepCollectSynchronize();
 	void stepSupplementalCollectAndSleep();
 	void stepCollectFinish();
+	void stepReadWeather();
 
 	Window *window;
 	QFile *logFile;
 	QString logName;
+	WeatherFetchThread *t;
 	QTimer *wsnFlowTimer;
 	QTimer *sleepCheckTimer;
 	BaseNode *baseNode;

@@ -4,7 +4,7 @@
 #
 #-------------------------------------------------
 
-QT       += core gui
+QT       += core gui xml
 
 TARGET = Gateway
 TEMPLATE = app
@@ -21,8 +21,8 @@ SOURCES += main.cpp\
     MainView.cpp \
     SettingsView.cpp \
     Preferences.cpp \
-    AbstractSerialDevice.cpp \
-    WeatherModule.cpp
+	AbstractSerialDevice.cpp \
+    WeatherFetchThread.cpp
 
 HEADERS  += Window.h \
     MainController.h \
@@ -38,6 +38,6 @@ HEADERS  += Window.h \
     Preferences.h \
     GlobalErrorCodes.h \
     AbstractSerialDevice.h \
-    WeatherModule.h
+    WeatherFetchThread.h
 
 FORMS    +=

@@ -1,5 +1,6 @@
 #include <QDomDocument>
 #include <QFile>
+#include <cstdlib>
 #include "WeatherFetchThread.h"
 
 WeatherFetchThread::WeatherFetchThread(QString prefix, QString logName, QString configName)

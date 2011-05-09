@@ -280,8 +280,8 @@ void MainController::stepCollectFinish()
 
 void MainController::stepReadWeather()
 {
-	QString timeTag = QDateTime::currentDateTime().toString("yyyy-M-d-h:m;");
-	t = new WeatherFetchThread(QDir::homePath() + ".",
+	QString timeTag = QDateTime::currentDateTime().toString("yyyy-M-d-h-m");
+	t = new WeatherFetchThread("/home/plg",
 							   QDir::homePath() + "/wsn/weather/" + timeTag + ".xml",
 							   QDir::homePath() + "/wsn/weather/open2300.conf");
 	connect(t, SIGNAL(finished()), this, SLOT(sendWeatherSms()));
@@ -659,6 +659,7 @@ void MainController::sendWeatherSms()
 				  t->datum()->dewPoint    ;
 	delete t;
 	sms.append(msg + ';');
+	log("Sending weather data: " + msg);
 
 	// Send the constructed SMS
 	gsmControl->sendSmsCommand(sms);

@@ -640,14 +640,6 @@ void MainController::sendDataSmss()
 
 void MainController::sendWeatherSms()
 {
-	// Construct header
-	QString sms("s51;");
-	QDateTime now = QDateTime::currentDateTime();
-	QString timeString = now.toString("yyyy,M,d,h,m,s;");
-	sms.append(timeString);
-	sms.append(QString::number(preferences->gatewayId()) + ';' +
-			   's' + QString::number(preferences->gatewayId()) + ',');
-
 	// Read data
 	int windDirInt = t->datum()->windDirInt;
 	const char *dirs[] = {"N", "NNE", "NE", "ENE",
@@ -675,15 +667,23 @@ void MainController::sendWeatherSms()
 	log("    Wind chill:  " + wchl);
 	log("    Dew point:   " + dew );
 
+	// Construct header
+	QString sms("s51;");
+	QDateTime now = QDateTime::currentDateTime();
+	QString timeString = now.toString("yyyy,M,d,h,m,s;");
+	sms.append(timeString);
+	sms.append(QString::number(preferences->gatewayId()) + ';' +
+			   's' + QString::number(preferences->gatewayId()) + ',');
+
 	// Append data
-	sms.append(temp + ',' +
-			   hum  + ',' +
-			   wspd + ',' +
-			   wdir + ',' +
-			   rain + ',' +
-			   prsr + ',' +
-			   wchl + ',' +
-			   dew  + ';' );
+	sms.append( 10.0*temp + ',' +
+				10.0*hum  + ',' +
+			   100.0*wspd + ',' +
+					 wdir + ',' +
+					 rain + ',' +
+					 prsr + ',' +
+					 wchl + ',' +
+					 dew  + ';' );
 
 	// Send the constructed SMS
 	gsmControl->sendSmsCommand(sms);

@@ -1,4 +1,4 @@
-#include <QDomDocument>
+#include <QSettings>
 #include <QFile>
 #include <cstdlib>
 #include "WeatherFetchThread.h"
@@ -18,67 +18,33 @@ WeatherFetchThread::~WeatherFetchThread()
 
 void WeatherFetchThread::run()
 {
-	QString cmd = mPrefix + "/xml2300 " + mLog + " " + mConfig;
+	QString cmd = mPrefix + "/conout2300 " + mLog + " " + mConfig;
 	system(cmd.toAscii().data());
-	if (parseXml())
+	if (readInData())
 		return;
 	cmd = mPrefix + "/minmax2300 rtotal " + mConfig;	// Reset rain total
 	system(cmd.toAscii().data());
 }
 
-int WeatherFetchThread::parseXml()
+int WeatherFetchThread::readInData()
 {
-	// Get the DOM document
-	QDomDocument dom;
-	QFile xml(mLog);
-	QString errorStr;
-	int errorLine;
-	int errorCol;
-	if (!xml.open(QIODevice::ReadOnly))
-	{
+	// Get the setting file
+	QSettings *log = new QSettings(mLog, QSettings::IniFormat);
+
+	if (!log)
 		return -1;
-	}
-	if (!dom.setContent(&xml, true, &errorStr, &errorLine, &errorCol))
-	{
-		xml.close();
-		return -2;
-	}
-	xml.close();
 
-	// XML order: temperature, humidity, dew point, wind, wind chill, rain, pressure
-	QDomElement root = dom.documentElement();
-	QDomNode n = root.firstChild().nextSibling();
+	mDatum->temperature = log->value("temperature/outdoor").toDouble();
+	mDatum->humidity = log->value("humidity/outdoor").toInt();
+	mDatum->dewPoint = log->value("misc/dewpoint").toDouble();
+	mDatum->windChill = log->value("misc/windchill").toDouble();
+	mDatum->windSpeed = log->value("wind/speed").toDouble();
+	mDatum->windDirStr = log->value("wind/dirStr").toString();
+	mDatum->windDirInt = log->value("wind/dirInt").toInt();
+	mDatum->rain = log->value("rain/total").toDouble();
+	mDatum->pressure = log->value("pressure/absolute").toDouble();
 
-	// Temperature -> Outdoor -> Value
-	n = n.nextSibling();
-	mDatum->temperature = n.firstChild().nextSibling().firstChildElement().text();
-
-	// Humidity -> Outdoor -> Value
-	n = n.nextSibling();
-	mDatum->humidity = n.firstChild().nextSibling().firstChildElement().text();
-
-	// Dewpoint -> Value
-	n = n.nextSibling();
-	mDatum->dewPoint = n.firstChildElement().text();
-
-	// Wind -> Value
-	//      -> Direction -> Text
-	n = n.nextSibling();
-	QDomNode v = n.firstChild();
-	mDatum->windSpeed = v.toElement().text();
-	mDatum->windDirStr = v.nextSibling().firstChildElement().text();
-
-	// Windchill -> Value
-	n = n.nextSibling();
-	mDatum->windChill = n.firstChildElement().text();
-
-	// Rain -> Total -> Value
-	n = n.nextSibling();
-	mDatum->rain = n.firstChild().nextSibling().nextSibling().firstChildElement().text();
-
-	// Pressure -> Value
-	n = n.nextSibling();
-	mDatum->pressure = n.firstChildElement().text();
+	delete log;
 
 	return 0;
 }

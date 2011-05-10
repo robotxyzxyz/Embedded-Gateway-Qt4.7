@@ -8,13 +8,14 @@ namespace Weather
 	class Datum
 	{
 	public:
-		QString temperature;
-		QString humidity;
-		QString dewPoint;
-		QString windChill;
-		QString rain;
-		QString pressure;
-		QString windSpeed;
+		double temperature;
+		int humidity;
+		double dewPoint;
+		double windChill;
+		double rain;
+		double pressure;
+		double windSpeed;
+		int windDirInt;
 		QString windDirStr;
 	};
 }
@@ -35,7 +36,7 @@ protected:
 	void run();
 
 private:
-	int parseXml();
+	int readInData();
 	QString mPrefix;
 	QString mLog;
 	QString mConfig;

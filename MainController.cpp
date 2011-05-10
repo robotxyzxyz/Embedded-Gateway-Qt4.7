@@ -280,9 +280,9 @@ void MainController::stepCollectFinish()
 
 void MainController::stepReadWeather()
 {
-	QString timeTag = QDateTime::currentDateTime().toString("yyyy-M-d-h-m");
+	QString timeTag = QDateTime::currentDateTime().toString("yyyy-MM-dd-hh-mm");
 	t = new WeatherFetchThread("/home/plg",
-							   QDir::homePath() + "/wsn/weather/" + timeTag + ".xml",
+							   QDir::homePath() + "/wsn/weather/" + timeTag + ".log",
 							   QDir::homePath() + "/wsn/weather/open2300.conf");
 	connect(t, SIGNAL(finished()), this, SLOT(sendWeatherSms()));
 	t->start();
@@ -648,18 +648,42 @@ void MainController::sendWeatherSms()
 	sms.append(QString::number(preferences->gatewayId()) + ';' +
 			   's' + QString::number(preferences->gatewayId()) + ',');
 
-	// Append data
-	QString msg = t->datum()->temperature + ',' +
-				  t->datum()->humidity    + ',' +
-				  t->datum()->windSpeed   + ',' +
-				  t->datum()->windDirStr  + ',' +
-				  t->datum()->rain        + ',' +
-				  t->datum()->pressure    + ',' +
-				  t->datum()->windChill   + ',' +
-				  t->datum()->dewPoint    ;
+	// Read data
+	int windDirInt = t->datum()->windDirInt;
+	const char *dirs[] = {"N", "NNE", "NE", "ENE",
+						  "E", "ESE", "SE", "SSE",
+						  "S", "SSW", "SW", "WSW",
+						  "W", "WNW", "NW", "NNW"};
+	QString temp = QString::number(t->datum()->temperature, 'f', 1);
+	QString hum  = QString::number(t->datum()->humidity);
+	QString wspd = QString::number(t->datum()->windSpeed,   'f', 0);
+	QString wdir = t->datum()->windDirStr;
+	QString rain = QString::number(t->datum()->rain,        'f', 2);
+	QString prsr = QString::number(t->datum()->pressure,    'f', 1);
+	QString wchl = QString::number(t->datum()->windChill,   'f', 1);
+	QString dew  = QString::number(t->datum()->dewPoint,    'f', 1);
+
 	delete t;
-	sms.append(msg + ';');
-	log("Sending weather data: " + msg);
+
+	// Display data
+	log("Sending weather data...");
+	log("    Temperature: " + temp);
+	log("    Humidity:    " + hum );
+	log("    Wind:        " + wspd + "(" + dirs[windDirInt] + ")");
+	log("    Rain drop:   " + rain);
+	log("    Atm. press.: " + prsr);
+	log("    Wind chill:  " + wchl);
+	log("    Dew point:   " + dew );
+
+	// Append data
+	sms.append(temp + ',' +
+			   hum  + ',' +
+			   wspd + ',' +
+			   wdir + ',' +
+			   rain + ',' +
+			   prsr + ',' +
+			   wchl + ',' +
+			   dew  + ';' );
 
 	// Send the constructed SMS
 	gsmControl->sendSmsCommand(sms);

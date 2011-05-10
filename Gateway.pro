@@ -4,7 +4,7 @@
 #
 #-------------------------------------------------
 
-QT       += core gui xml
+QT       += core gui
 
 TARGET = Gateway
 TEMPLATE = app

@@ -676,9 +676,9 @@ void MainController::sendWeatherSms()
 			   's' + QString::number(preferences->gatewayId()) + ',');
 
 	// Append data
-	sms.append( 10.0*temp + ',' +
-				10.0*hum  + ',' +
-			   100.0*wspd + ',' +
+	sms.append(QString::number(10.0*temp.toDouble()) + ',' +
+			   QString::number(10.0*hum.toInt())  + ',' +
+			   QString::number(100.0*wspd.toDouble()) + ',' +
 					 wdir + ',' +
 					 rain + ',' +
 					 prsr + ',' +

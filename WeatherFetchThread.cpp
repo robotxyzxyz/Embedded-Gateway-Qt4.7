@@ -19,11 +19,13 @@ WeatherFetchThread::~WeatherFetchThread()
 void WeatherFetchThread::run()
 {
 	QString cmd = mPrefix + "/conout2300 " + mLog + " " + mConfig;
-	system(cmd.toAscii().data());
+	if (system(cmd.toAscii().data()))
+		emit fetchError(Get_Con_File_Error);
 	if (readInData())
 		return;
 	cmd = mPrefix + "/minmax2300 rtotal " + mConfig;	// Reset rain total
-	system(cmd.toAscii().data());
+	if (system(cmd.toAscii().data()))
+		emit fetchError(Reset_Rain_Error);
 }
 
 int WeatherFetchThread::readInData()

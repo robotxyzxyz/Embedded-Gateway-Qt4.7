@@ -32,8 +32,14 @@ public:
 		return mDatum;
 	}
 
+	static const int Get_Con_File_Error = 1;
+	static const int Reset_Rain_Error   = 2;
+
 protected:
 	void run();
+
+signals:
+	void fetchError(int code);
 
 private:
 	int readInData();

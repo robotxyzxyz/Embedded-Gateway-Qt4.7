@@ -4,6 +4,7 @@
 #include "AbstractSerialDevice.h"
 #include <QList>
 class QSocketNotifier;
+class QTimer;
 
 class BaseNode : public AbstractSerialDevice
 {
@@ -23,12 +24,15 @@ public slots:
 
 private slots:
 	void readData(int fd);
+        void readTimerFired();
 
 private:
 	void initMembers();
 	bool isCrcCorrect(QList<uint8_t> packet);
 	uint16_t getCrcOfPacket(QList<uint8_t> packet);
 	uint16_t calcCrcByte(uint16_t crc, uint8_t b);
+
+        QTimer *readTimer;
 
 	QList<uint8_t> bufferIn;
 	bool shouldReceive;

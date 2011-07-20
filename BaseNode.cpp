@@ -1,4 +1,6 @@
 #include "BaseNode.h"
+#include <sys/ioctl.h>
+#include <QTimer>
 #include <QSocketNotifier>
 
 BaseNode::BaseNode(QString path, QObject *parent) : AbstractSerialDevice(path, parent)
@@ -10,6 +12,25 @@ BaseNode::BaseNode(QString path, QObject *parent) : AbstractSerialDevice(path, p
 		shouldReceive = false;
 		emit occuredError(Serial_Open_Error);
 	}
+	else
+        {
+                disconnect(notifier, SIGNAL(activated(int)), this, 0);
+                readTimer = new QTimer(this);
+                connect(readTimer, SIGNAL(timeout()), this, SLOT(readTimerFired()));
+                readTimer->start(1000);
+        }
+}
+
+void BaseNode::readTimerFired()
+{
+    int bytes;
+    int fd = notifier->socket();
+    ioctl(fd, FIONREAD, &bytes);
+    while (bytes)
+    {
+        readData(fd);
+        ioctl(fd, FIONREAD, &bytes);
+    }
 }
 
 void BaseNode::initMembers()

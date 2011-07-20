@@ -141,6 +141,7 @@ void MainController::deployNetwork()
 	}
 
 	preferences->setPendingTask(PendingTask::Should_Deploy);
+        log("Check timer stopped");
 	sleepCheckTimer->stop();
 	wsnFlowTimer->stop();
 	clearLog();
@@ -263,7 +264,8 @@ void MainController::stepSupplementalCollectAndSleep()
 	// If the network doesn't collect for this time interval, something's wrong
 	// The time is calculated as (collect interval) * 0.1 + (sleep time)
 	// This timer is stopped when collectData() or deployNetwork() is called
-	sleepCheckTimer->start((int)timeToSleep * 1000 + 30 * 60 * 1000 / 10);
+        log("Check timer started");
+        sleepCheckTimer->start(((int)timeToSleep + 60) * 1000);
 }
 
 void MainController::stepCollectFinish()
@@ -396,7 +398,7 @@ void MainController::collectData()
 	}
 
 	preferences->setPendingTask(PendingTask::Should_Collect);
-
+        log("Check timer stopped");
 	sleepCheckTimer->stop();
 	wsnFlowTimer->stop();
 	stepSatisfied = false;
@@ -535,7 +537,7 @@ void MainController::wakeNetwork()
 
 	// Tell the nodes the gateway is awake
 	baseNode->sendPacket(Packets::Awake);
-
+        log("Check timer stopped");
 	sleepCheckTimer->stop();
 
 	// Wait for reroute command

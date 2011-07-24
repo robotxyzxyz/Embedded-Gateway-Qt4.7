@@ -22,7 +22,8 @@ SOURCES += main.cpp\
     SettingsView.cpp \
     Preferences.cpp \
 	AbstractSerialDevice.cpp \
-    WeatherFetchThread.cpp
+    WeatherFetchThread.cpp \
+    TimerSocketNotifier.cpp
 
 HEADERS  += Window.h \
     MainController.h \
@@ -38,6 +39,7 @@ HEADERS  += Window.h \
     Preferences.h \
     GlobalErrorCodes.h \
     AbstractSerialDevice.h \
-    WeatherFetchThread.h
+    WeatherFetchThread.h \
+    TimerSocketNotifier.h
 
 FORMS    +=

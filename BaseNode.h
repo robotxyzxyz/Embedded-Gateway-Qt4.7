@@ -23,16 +23,13 @@ public slots:
 	bool sendPacket(QList<uint8_t> packet);
 
 private slots:
-	void readData(int fd);
-        void readTimerFired();
+	void readByte(int fd);
 
 private:
 	void initMembers();
 	bool isCrcCorrect(QList<uint8_t> packet);
 	uint16_t getCrcOfPacket(QList<uint8_t> packet);
 	uint16_t calcCrcByte(uint16_t crc, uint8_t b);
-
-        QTimer *readTimer;
 
 	QList<uint8_t> bufferIn;
 	bool shouldReceive;

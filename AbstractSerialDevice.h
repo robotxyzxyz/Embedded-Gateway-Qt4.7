@@ -2,9 +2,9 @@
 #define ABSTRACTSERIALDEVICE_H
 
 #include <QObject>
-#include <stdint.h>		// For uintXX_t
+#include <stdint.h>		    // For uintXX_t
 #include <termios.h>		// For termios struct and options
-class QSocketNotifier;
+class TimerSocketNotifier;
 
 class AbstractSerialDevice : public QObject
 {
@@ -18,9 +18,9 @@ public:
 		return serialPath;
 	}
 
-	static const int Serial_Open_Error = -1;	// Inability to open serial port
-	static const int Serial_Write_Error = -2;	// Inability to write to serial
-	static const int Serial_Read_Error = -3;	// Inability to read from serial
+	static const int Serial_Open_Error = -1;	// Inability to open port
+	static const int Serial_Write_Error = -2;	// Inability to write
+	static const int Serial_Read_Error = -3;	// Inability to read
 
 signals:
 	void occuredError(const int errorCode);
@@ -29,11 +29,12 @@ protected:
 	int initSerial();
 
 	QString serialPath;
-	QSocketNotifier *notifier;
+	TimerSocketNotifier *notifier;
 	speed_t baud;
 
 protected slots:
-	virtual void readData(int fd) = 0;
+    void readData();
+	virtual void readByte(int fd) = 0;
 };
 
 #endif // ABSTRACTSERIALDEVICE_H

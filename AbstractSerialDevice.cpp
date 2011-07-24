@@ -1,6 +1,7 @@
 #include "AbstractSerialDevice.h"
-#include <QSocketNotifier>
+#include "TimerSocketNotifier.h"
 #include <fcntl.h>					// For file control options
+#include <sys/ioctl.h>              // For ioctl()
 
 AbstractSerialDevice::AbstractSerialDevice(QString path, QObject *parent) : QObject(parent)
 {
@@ -31,8 +32,20 @@ int AbstractSerialDevice::initSerial()
 	if (tcsetattr(fd, TCSAFLUSH, &options) != 0)
 		return -1;
 
-	notifier = new QSocketNotifier(fd, QSocketNotifier::Read, this);
+	notifier = new TimerSocketNotifier(fd, this);
 	connect(notifier, SIGNAL(activated(int)), this, SLOT(readData(int)));
 
 	return fd;
+}
+
+void AbstractSerialDevice::readData()
+{
+    int bytes;
+    int fd = notifier->socket();
+    ::ioctl(fd, FIONREAD, &bytes);
+    while (bytes)
+    {
+        readByte(fd);
+        ioctl(fd, FIONREAD, &bytes);
+    }
 }

@@ -17,7 +17,7 @@ public slots:
 	bool sendCommand(QString command);
 
 private slots:
-	void readData(int fd);
+	void readByte(int fd);
 
 private:
 	void initMembers();

@@ -1,5 +1,5 @@
 #include "GsmModule.h"
-#include <QSocketNotifier>
+#include "TimerSocketNotifier.h"
 
 GsmModule::GsmModule(QString path, QObject *parent) : AbstractSerialDevice(path, parent)
 {
@@ -29,7 +29,7 @@ bool GsmModule::sendCommand(QString command)
 	return true;
 }
 
-void GsmModule::readData(int fd)
+void GsmModule::readByte(int fd)
 {
 	// Read the byte
 	char byte;

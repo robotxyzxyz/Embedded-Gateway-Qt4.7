@@ -39,5 +39,3 @@ HEADERS  += Window.h \
     GlobalErrorCodes.h \
     AbstractSerialDevice.h \
     WeatherFetchThread.h
-
-FORMS    +=

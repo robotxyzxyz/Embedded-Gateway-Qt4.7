@@ -5,7 +5,7 @@
 #include <QList>
 #include <stdint.h>
 
-struct NodeData
+struct NodeData                   //所有的NodeData都會有以下成員變數
 {
 	uint8_t senderNodeId;
 	uint8_t dataSourceNodeId;

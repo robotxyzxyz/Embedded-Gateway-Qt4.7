@@ -3,7 +3,7 @@
 #include <QTimer>
 #include <QSocketNotifier>
 
-BaseNode::BaseNode(QString path, QObject *parent) : AbstractSerialDevice(path, parent)
+BaseNode::BaseNode(QString path, QObject *parent) : AbstractSerialDevice(path, parent)  //跟BASENODE溝通
 {
 	initMembers();
 
@@ -49,7 +49,7 @@ bool BaseNode::sendPacket(QList<uint8_t> packet)
 
 	packet.prepend(0x7e);
 	packet.append(0x7e);
-	size += 2;
+        size += 2;/*加頭和尾0x7e的大小*/
 
 	int fd = notifier->socket();
 	for (int i = 0; i < size; i++)

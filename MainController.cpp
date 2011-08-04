@@ -16,31 +16,31 @@
 #include "Window.h"
 #include <QDebug>
 
-MainController::MainController(QObject *parent) : QObject(parent)
+MainController::MainController(QObject *parent) : QObject(parent) //
 {
 	preferences = new Preferences();
 	initMembers();
 	startGsmCsqUpdateDaemon();
 
-	switch (preferences->pendingTask())
+        switch (preferences->pendingTask())//參數選擇.現階段任務
 	{
-	case PendingTask::Idle:
+        case PendingTask::Idle:  //待機
 		if (!loadNetworkParams())
 			QTimer::singleShot(1000, this, SLOT(deployNetwork()));
 		break;
 
-	case PendingTask::Should_Deploy:
+        case PendingTask::Should_Deploy://佈建
 		QTimer::singleShot(1000, this, SLOT(deployNetwork()));
 		break;
 
-	case PendingTask::Should_Collect:
+        case PendingTask::Should_Collect: //蒐集資料
 		if (loadNetworkParams())
 			QTimer::singleShot(1000, this, SLOT(collectData()));
 		else
 			QTimer::singleShot(1000, this, SLOT(deployNetwork()));
 		break;
 
-	case PendingTask::Should_Reboot:
+        case PendingTask::Should_Reboot: //重開(防呆用)
 		preferences->setPendingTask(PendingTask::Idle);
 		reboot();
 		break;
@@ -131,7 +131,7 @@ void MainController::startGsmCsqUpdateDaemon()
 	QObject::startTimer(10 * 60 * 1000);
 }
 
-void MainController::deployNetwork()
+void MainController::deployNetwork()// 佈建網路
 {
 	if (preferences->pendingTask() == PendingTask::Should_Reboot)
 	{
@@ -145,7 +145,7 @@ void MainController::deployNetwork()
 	sleepCheckTimer->stop();
 	wsnFlowTimer->stop();
 	clearLog();
-	step = WsnSteps::Not_Deployed;
+        step = WsnSteps::Not_Deployed;  //
 
 	if (timesDeployFailed >= Deploy_Failure_Reboot_Threshold)
 		reboot();
@@ -155,8 +155,8 @@ void MainController::deployNetwork()
 	stepSatisfied = false;
 
 	wsnParams.hasRootNodes = false;
-	wsnParams.maxTier = 0;
-	wsnParams.nodeAndParentIds.clear();
+        wsnParams.maxTier = 0;               //最大層數
+        wsnParams.nodeAndParentIds.clear();  //每個節點上層是誰
 	wsnParams.dataOfNodeIds.clear();
 
 	wsnFlowTimer->start(1);
@@ -225,8 +225,8 @@ void MainController::stepCollectSendNextRequest()
 {
 	int thisId = rootNodeIdsToCollect.takeFirst();
 	log("Sending request to node " + QString::number(thisId));
-	QList<uint8_t> req = Packets::Collect_Request;
-	req[GatewayPacket::Receiver] = (uint8_t)thisId;
+        QList<uint8_t> req = Packets::Collect_Request;/*packet範本*/
+        req[GatewayPacket::Receiver/*列舉值 整數 ID*/] = (uint8_t)thisId;
 	baseNode->sendPacket(req);
 }
 
@@ -311,7 +311,7 @@ void MainController::wsnFlowFired()
 		stepDeploySendNextStartCommand();
 		wsnFlowTimer->start(1000);
 	}
-	else if (step == WsnSteps::Deploy_Request_Path)
+        else if (step == WsnSteps::Deploy_Request_Path) //要路徑  等10秒(10秒之內有收到就會到下一狀態)  沒人回就重佈
 	{
 		stepDeployRequestPath();
 		wsnFlowTimer->start(10000);
@@ -324,7 +324,7 @@ void MainController::wsnFlowFired()
 	{
 		// First check for the path result
 		// Reroute in 3 seconds if the path and tier settings are not complete
-		if (!isNetworkCollectable())
+                if (!isNetworkCollectable())
 		{
 			QTimer::singleShot(3000, this, SLOT(deployNetwork()));
 			log("Network deployment failed, will reroute in 3 seconds...");
@@ -355,8 +355,8 @@ void MainController::wsnFlowFired()
 	else if (step == WsnSteps::Collect_Requesting)
 	{
 		stepCollectSendNextRequest();
-		if (!rootNodeIdsToCollect.isEmpty())
-			step--;
+                if (!rootNodeIdsToCollect.isEmpty())//如果不是empty 回上一步  是的話 繼續
+                        step--;//回上一步
 		wsnFlowTimer->start(5000);
 	}
 	else if (step == WsnSteps::Collect_Wait_To_Receive)
@@ -404,7 +404,7 @@ void MainController::collectData()
 	stepSatisfied = false;
 	clearLog();
 
-	if (!isNetworkCollectable())
+        if (!isNetworkCollectable())  //判斷有無第一層
 	{
 		preferences->setPendingTask(PendingTask::Should_Reboot);
 		QTimer::singleShot(1, this, SLOT(deployNetwork()));

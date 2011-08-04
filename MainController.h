@@ -7,6 +7,7 @@
 #include <stdint.h>
 #include "FMacPacketParser.h"
 #include "Preferences.h"
+<<<<<<< Updated upstream
 class QFile;
 class QSettings;
 class QStringList;
@@ -15,26 +16,34 @@ class BaseNode;
 class GsmModuleController;
 class WeatherFetchThread;
 class Window;
+=======
+class QFile;                    //
+class QSettings;                //
+class QStringList;              //
+class QTimer;                   //
+class BaseNode;                 //Base node 類別
+class GsmModuleController;      //GSM模組類別
+class Window;                   //視窗類別
 
-namespace WsnSteps
+namespace WsnSteps              //WSN階段的名稱空間
 {
-	enum WsnSteps
+    enum WsnSteps           //列舉WSN階段
 	{
-		Not_Deployed						= -2,
-		Deploy_Start						= -1,
-		Deploy_Reset						=  0,
-		Deploy_Request_Path				= 11,
-		Deploy_Distribute_Time_Slots		,
-		Deploy_Finish					,
-		Not_Collected					,
-		Collect_Start					,
-		Collect_Request					,
-		Collect_Requesting				,
-		Collect_Wait_To_Receive			,
-		Synchronize						,
-		Supplemental_Collect_And_Sleep	,
-		Collect_Finish					,
-		Read_Weather					,
+        Not_Deployed					= -2,  //未佈建
+        Deploy_Start					= -1,  //開始佈建
+        Deploy_Reset					=  0,  //重新佈建
+        Deploy_Request_Path				= 11,  //要路徑   11
+        Deploy_Distribute_Time_Slots	,      //分配時槽  12
+        Deploy_Finish					,      //佈建完成  13
+        Not_Collected					,      //未蒐集資料  14
+        Collect_Start					,      //開始蒐集資料 15
+        Collect_Request					,      //要資料命令  16
+        Collect_Requesting				,      //          17
+        Collect_Wait_To_Receive			,      //等待接收   18
+        Synchronize						,      //同步       19
+        Supplemental_Collect_And_Sleep	,      //睡眠       20
+        Collect_Finish					,      //完成蒐集資料   21
+        Read_Weather
 	};
 }
 
@@ -57,11 +66,11 @@ protected:
 	void timerEvent(QTimerEvent *e);
 
 private slots:
-	void deployNetwork();
-	void collectData();
+    void deployNetwork();       //佈建網路
+    void collectData();         //蒐集資料
 	void wsnFlowFired();
-	void setMaxTier(int tier);
-	void addPath(int nodeId, int parentId, bool isRelayed);
+    void setMaxTier(int tier);  //設定層數(傳入 int 層數)
+    void addPath(int nodeId, int parentId, bool isRelayed);//加路徑(int 節點號碼, int 父節點號碼, bool )
 	void addData(NodeData data, bool isSupplemental);
 	void sendPathSmss();
 	void sendDataSmss();
@@ -71,7 +80,7 @@ private slots:
 	void reboot();
 
 private:
-	void initMembers();
+        void initMembers();                   //初始成員
 	void initializeBaseNodeAndGsmModule();
 	bool loadNetworkParams();
 	void startGsmCsqUpdateDaemon();

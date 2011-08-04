@@ -19,7 +19,7 @@ namespace NodePacket
 	enum NodePacket
 	{
 		Group_Id                  = 10,
-		Cmdform                   ,
+                Cmdform                   ,
 		Data_Sender_Id            ,
 		Data_Source_Id            ,
 		Data_Source_Tier          ,
@@ -32,7 +32,7 @@ namespace NodePacket
 		Data_Pest_Lo              ,
 		Data_Pest_Hi              ,
 		Data_Par_Lo_Lo            ,
-		Data_Par_Lo_Hi            ,
+                Data_Par_Lo_Hi            ,
 		/*                        */
 		Deploy_Max_Tier           = 15,
 		/*                        */

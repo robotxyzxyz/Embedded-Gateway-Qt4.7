@@ -2,7 +2,7 @@
 #include <QDir>
 #include <QSettings>
 
-Preferences::Preferences()
+Preferences::Preferences()  //Åª³]©wÀÉ
 {
 	// Read the pref file
 	fileLoc = QDir::homePath() + "/wsn/gateway/preferences";
